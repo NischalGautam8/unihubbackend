@@ -1,0 +1,75 @@
+import {
+  express,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+} from "express";
+import mongoose from "mongoose";
+import postinterface from "../interface/postinterface";
+
+import PostModel from "../models/postmodel";
+
+const createPost: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log(req.body);
+    const body: postinterface = req.body;
+    console.log(body ? "yes" : "no");
+    const result = await PostModel.create({
+      description: body.description,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      userId: body.userId,
+    });
+    if (result) {
+      res.status(200).json("Posted sucessfully");
+    } else {
+      res.status(500).json({ msg: "unable to create a new post" });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: err });
+  }
+};
+const likepost: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userid: string = req.body.userid;
+    console.log(typeof userid);
+    const { id } = req.params;
+    const post: postinterface = await PostModel.findOne(
+      {
+        _id: id,
+        likes: userid,
+      },
+      { new: true }
+    );
+    if (post) {
+      return res.status(500).json("you have already liked this post");
+    } else {
+      const posttolike = await PostModel.findOneAndUpdate(
+        { _id: id },
+        {
+          $push: { likes: userid },
+        },
+        { new: true }
+      );
+      if (!posttolike) {
+        res.status(500).json({ err: "unable to like the post" });
+      } else {
+        res.status(200).json("liked the post");
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export { createPost, likepost };

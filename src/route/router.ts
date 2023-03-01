@@ -1,0 +1,11 @@
+import express from "express";
+const routing = express.Router();
+import { createPost, likepost } from "../controllers/postcontroller";
+import { createcomment, getcomments } from "../controllers/commentcontrller";
+import { login, register } from "../controllers/usercontroller";
+routing.route("/posts").post(createPost);
+routing.route("/posts/:id").post(likepost);
+routing.route("/register").post(register);
+routing.route("/login").post(login);
+routing.route("/comment").post(createcomment).get(getcomments);
+export default routing;

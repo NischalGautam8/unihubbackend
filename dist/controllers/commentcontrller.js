@@ -48,19 +48,25 @@ const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createcomment = createcomment;
 const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { postid } = req.body;
+        const postid = req.params.id;
+        console.log(postid);
         const post = yield postmodel_1.default.findOne({ _id: postid });
-        const commentidarr = post.comments;
-        const newarr = [];
-        yield Promise.all(commentidarr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
-            const commentofpost = yield commentmodel_1.default.findOne({
-                _id: element,
-            });
-            newarr.push(commentofpost);
-            // console.log(commentofpost);
-        })));
-        console.log(newarr);
-        res.status(200).json({ msg: newarr });
+        if (!post) {
+            return res.status(400).json("unable to find post");
+        }
+        else {
+            const commentidarr = post.comments;
+            const newarr = [];
+            yield Promise.all(commentidarr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
+                const commentofpost = yield commentmodel_1.default.findOne({
+                    _id: element,
+                });
+                newarr.push(commentofpost);
+                // console.log(commentofpost);
+            })));
+            console.log(newarr);
+            res.status(200).json({ msg: newarr });
+        }
     }
     catch (err) {
         console.log(err);

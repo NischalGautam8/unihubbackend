@@ -38,22 +38,27 @@ const createcomment: RequestHandler = async (req: Request, res: Response) => {
 };
 const getcomments: RequestHandler = async (req: Request, res: Response) => {
   try {
-    const { postid } = req.body;
+    const postid = req.params.id;
+    console.log(postid);
 
     const post: postinterface = await Post.findOne({ _id: postid });
-    const commentidarr = post.comments;
-    const newarr: Array<commentinterface> = [];
-    await Promise.all(
-      commentidarr.map(async (element) => {
-        const commentofpost: commentinterface = await Comment.findOne({
-          _id: element,
-        });
-        newarr.push(commentofpost);
-        // console.log(commentofpost);
-      })
-    );
-    console.log(newarr);
-    res.status(200).json({ msg: newarr });
+    if (!post) {
+      return res.status(400).json("unable to find post");
+    } else {
+      const commentidarr = post.comments;
+      const newarr: Array<commentinterface> = [];
+      await Promise.all(
+        commentidarr.map(async (element) => {
+          const commentofpost: commentinterface = await Comment.findOne({
+            _id: element,
+          });
+          newarr.push(commentofpost);
+          // console.log(commentofpost);
+        })
+      );
+      console.log(newarr);
+      res.status(200).json({ msg: newarr });
+    }
   } catch (err) {
     console.log(err);
   }

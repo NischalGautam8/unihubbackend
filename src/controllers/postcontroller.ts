@@ -9,6 +9,36 @@ import mongoose from "mongoose";
 import postinterface from "../interface/postinterface";
 
 import PostModel from "../models/postmodel";
+const getonepost: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const result = await PostModel.findOne({ _id: id });
+    if (!result) {
+      return res.status(404).json("cannot find the post");
+    } else {
+      res.status(200).json(result);
+    }
+  } catch (err) {
+    res.status(400).json(err);
+    console.log(err);
+  }
+};
+const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
+  const page: number = Number(req.params.page) || 1;
+
+  const posts = PostModel.find();
+  if (!posts) {
+    return res.status(400).json({ err: "unable to retrive posts" });
+  } else {
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const postb = posts.skip(skip);
+    const posta = postb.limit(limit);
+    const toreturn = await posta;
+    res.status(200).json({ msg: toreturn });
+  }
+};
 
 const createPost: RequestHandler = async (
   req: Request,
@@ -23,6 +53,7 @@ const createPost: RequestHandler = async (
       description: body.description,
       firstName: body.firstName,
       lastName: body.lastName,
+      username: body.username,
       userId: body.userId,
     });
     if (result) {
@@ -72,4 +103,4 @@ const likepost: RequestHandler = async (
   }
 };
 
-export { createPost, likepost };
+export { createPost, likepost, getHomePosts, getonepost };

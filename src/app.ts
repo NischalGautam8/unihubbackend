@@ -1,5 +1,6 @@
 import express from "express";
 const app = express();
+
 import mongoose from "mongoose";
 import routing from "./route/router";
 import bodyParser from "body-parser";
@@ -9,7 +10,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 import dotenv from "dotenv";
 dotenv.config();
-
+import cors from "cors";
+app.use(cors());
+app.use(
+  require("express-session")({
+    secret: "your secret",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
 mongoose.set("strictQuery", false);
 
 const start = () => {

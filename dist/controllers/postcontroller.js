@@ -12,8 +12,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.likepost = exports.createPost = void 0;
+exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
+const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        console.log(id);
+        const result = yield postmodel_1.default.findOne({ _id: id });
+        if (!result) {
+            return res.status(404).json("cannot find the post");
+        }
+        else {
+            res.status(200).json(result);
+        }
+    }
+    catch (err) {
+        res.status(400).json(err);
+        console.log(err);
+    }
+});
+exports.getonepost = getonepost;
+const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const page = Number(req.params.page) || 1;
+    const posts = postmodel_1.default.find();
+    if (!posts) {
+        return res.status(400).json({ err: "unable to retrive posts" });
+    }
+    else {
+        const limit = 20;
+        const skip = (page - 1) * limit;
+        const postb = posts.skip(skip);
+        const posta = postb.limit(limit);
+        const toreturn = yield posta;
+        res.status(200).json({ msg: toreturn });
+    }
+});
+exports.getHomePosts = getHomePosts;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.body);
@@ -23,6 +57,7 @@ const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             description: body.description,
             firstName: body.firstName,
             lastName: body.lastName,
+            username: body.username,
             userId: body.userId,
         });
         if (result) {

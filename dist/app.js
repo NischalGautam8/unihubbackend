@@ -13,6 +13,13 @@ app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+const cors_1 = __importDefault(require("cors"));
+app.use((0, cors_1.default)());
+app.use(require("express-session")({
+    secret: "your secret",
+    resave: true,
+    saveUninitialized: true,
+}));
 mongoose_1.default.set("strictQuery", false);
 const start = () => {
     try {

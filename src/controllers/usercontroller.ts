@@ -1,9 +1,21 @@
 import usermodel from "../models/usermodel";
+import refreshTokenModel from "../models/refreshtoken";
 import { RequestHandler, Request, Response } from "express";
+import dotenv from "dotenv";
+dotenv.config();
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 const register: RequestHandler = async (req: Request, res: Response) => {
   try {
+    if (req.body.password.length < 6) {
+      return res
+        .status(400)
+        .json({ msg: "password must be at least 6 characters" });
+    }
+    if (!req.body.username) {
+      return res.status(400).json("username is required");
+    }
     const user = await usermodel.create(
       {
         username: req.body.username,
@@ -18,11 +30,19 @@ const register: RequestHandler = async (req: Request, res: Response) => {
     if (!user) {
       res.status(400).json("unable to create user");
     } else {
-      res.status(200).json({ user });
+      console.log("user:", user);
+      const acess_token = createAcessToken({ id: user._id });
+      const refresh_token = createRefreshToken({ id: user._id });
+      const tokeninserted = await refreshTokenModel.create({
+        token: refresh_token,
+        user: new mongoose.Types.ObjectId(user._id),
+      });
+      console.log(refresh_token, acess_token, tokeninserted);
+      return res.status(200).json({ refresh_token, acess_token });
     }
   } catch (err) {
-    return res.status(400).send({ err: err });
     console.log(err);
+    return res.status(400).send({ err: err });
   }
 };
 const login = async (req: Request, res: Response) => {
@@ -34,12 +54,37 @@ const login = async (req: Request, res: Response) => {
     if (!(await bcrypt.compare(password, result.password))) {
       res.status(500).json({ msg: "wrong password" });
     } else {
-      const token = jwt.sign(
-        { username: username, lastname: result.lastName },
-        "secretkey123"
-      );
-      return res.status(500).json({ token });
+      const acess_token = createAcessToken({ id: result._id });
+      const refresh_token = createRefreshToken({ id: result._id });
+      return res.status(200).json({ acess_token, refresh_token });
     }
   }
 };
-export { register, login };
+const createAcessToken = (payload: object) => {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, {
+    expiresIn: "30s",
+  });
+};
+const createRefreshToken = (payload: object) => {
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET as string, {
+    expiresIn: "30d",
+  });
+};
+const generatenewacesstoken: RequestHandler = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const refreshToken = req.body.refreshToken;
+    const refTokenOnDB = await refreshTokenModel.find({ token: refreshToken });
+    if (!refTokenOnDB) {
+      return res.status(400).json({ err: "invalid refresh token" });
+    }
+    const acesstoken = createAcessToken({ _id: refTokenOnDB.user });
+    console.log(acesstoken);
+    return res.status(200).json({ acesstoken });
+  } catch (err) {
+    console.log(err);
+  }
+};
+export { register, login, generatenewacesstoken };

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
+exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -73,10 +73,37 @@ const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.createPost = createPost;
+const unlikepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const postid = req.params.id;
+        const userid = req.body.userid;
+        if (!userid) {
+            return res.status(400).json("userid must be provided");
+        }
+        const post = yield postmodel_1.default.findOneAndUpdate({ _id: req.params.id, likes: userid }, {
+            $pull: { likes: userid },
+        }, { new: true });
+        if (!post) {
+            return res
+                .status(500)
+                .json("unable to find or unlike post as you have not liked it ");
+        }
+        else {
+            res.status(200).json("unliked the post");
+        }
+    }
+    catch (err) {
+        res.status(500).json({ err: err });
+    }
+});
+exports.unlikepost = unlikepost;
 const likepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userid = req.body.userid;
         console.log(typeof userid);
+        if (!userid) {
+            return res.status(500).json("userid must be sent");
+        }
         const { id } = req.params;
         const post = yield postmodel_1.default.findOne({
             _id: id,

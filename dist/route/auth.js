@@ -4,30 +4,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const passport = require("passport");
+const passport_1 = __importDefault(require("passport"));
+require("../passportmiddleware");
 const router = express_1.default.Router();
-router.get("/login/sucess", (req, res) => {
-    if (req.user) {
-        res.status(200).json({
-            error: false,
-            message: "Sucessfully logged in",
-            user: req.user,
-        });
-    }
-    else {
-        res.status(403).json({ error: true, message: "Not authorized" });
-    }
+router.get("/google", passport_1.default.authenticate("google", { scope: ["email profile"] }));
+router.get("/callback", passport_1.default.authenticate("google", {
+    successRedirect: "http://localhost:5000/auth/success",
+    failureRedirect: "http://localhost:5000/auth/failed",
+}, (req, res) => {
+    console.log(req.user);
+}));
+router.get("/success", (req, res) => {
+    res.send("Successfully logged in!");
 });
-router.get("/google", passport.authenticate("google"));
-// router.get(
-//   "/google/callback",
-//   passport.authenticate("google", {
-//     successRedirect: process.env.CLIENT_URL,
-//     failureRedirect: "/login/failed",
-//   })
-// );
-// router.get("/logout", (req, res) => {
-//   req.logout();
-//   res.redirect(process.env.CLIENT_URL);
-// });
+router.get("/failed", (req, res) => {
+    res.send("Failed to log in!");
+});
 exports.default = router;

@@ -13,27 +13,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const passport_1 = __importDefault(require("passport"));
-const passport_google_oauth20_1 = require("passport-google-oauth20");
-passport_1.default.use(new passport_google_oauth20_1.Strategy({
-    clientID: "830386723810-nk79gggacb4c7tr7d66nbqoqqrf4h6v1.apps.googleusercontent.com",
-    clientSercet: "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",
-    callbackURL: "http://localhost:5000/auth/callback",
-    scope: ["profile", "email"],
-}, function (acessToken, refreshToken, profile, callback, done) {
-    return __awaiter(this, void 0, void 0, function* () {
-        //this is where you want to store data to db
-        try {
-            return done(null, profile);
-        }
-        catch (err) {
-            return done(err, null);
-        }
-    });
-}));
+const passport_google_oauth20_1 = __importDefault(require("passport-google-oauth20"));
+const GoogleStrategy = passport_google_oauth20_1.default.Strategy;
 passport_1.default.serializeUser(function (user, done) {
     done(null, user);
 });
 passport_1.default.deserializeUser(function (user, done) {
     done(null, user);
 });
-exports.default = passport_1.default;
+passport_1.default.use(new GoogleStrategy({
+    clientID: "830386723810-nk79gggacb4c7tr7d66nbqoqqrf4h6v1.apps.googleusercontent.com",
+    clientSecret: "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",
+    callbackURL: "http://localhost:5000/auth/callback",
+    scope: ["profile", "email"],
+    passReqToCallback: true,
+}, function (req, accessToken, refreshToken, profile, done) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // This function will be called when the user has been authenticated by Google
+        // You can use this function to save the user data to your database or perform other operations
+        try {
+            // Save user data to database
+            // const user = await userModel.findOneAndUpdate(
+            //   { email: profile.emails[0].value },
+            //   { name: profile.displayName },
+            //   { upsert: true, new: true }
+            // );
+            return done(null, user);
+        }
+        catch (err) {
+            return done(err, null);
+        }
+    });
+}));
+exports.default = GoogleStrategy;

@@ -56,12 +56,13 @@ const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         else {
             const commentidarr = post.comments;
-            const newarr = [];
+            var newarr = [];
             yield Promise.all(commentidarr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
                 const commentofpost = yield commentmodel_1.default.findOne({
                     _id: element,
                 });
                 newarr.push(commentofpost);
+                newarr = newarr.filter((element) => element != null);
                 // console.log(commentofpost);
             })));
             console.log(newarr);

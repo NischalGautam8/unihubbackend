@@ -66,6 +66,35 @@ const createPost: RequestHandler = async (
     res.status(500).json({ error: err });
   }
 };
+const unlikepost: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const postid = req.params.id;
+    const userid = req.body.userid;
+    if (!userid) {
+      return res.status(400).json("userid must be provided");
+    }
+    const post: postinterface = await PostModel.findOneAndUpdate(
+      { _id: req.params.id, likes: userid },
+      {
+        $pull: { likes: userid },
+      },
+      { new: true }
+    );
+    if (!post) {
+      return res
+        .status(500)
+        .json("unable to find or unlike post as you have not liked it ");
+    } else {
+      res.status(200).json("unliked the post");
+    }
+  } catch (err) {
+    res.status(500).json({ err: err });
+  }
+};
 const likepost: RequestHandler = async (
   req: Request,
   res: Response,
@@ -74,6 +103,9 @@ const likepost: RequestHandler = async (
   try {
     const userid: string = req.body.userid;
     console.log(typeof userid);
+    if (!userid) {
+      return res.status(500).json("userid must be sent");
+    }
     const { id } = req.params;
     const post: postinterface = await PostModel.findOne(
       {
@@ -103,4 +135,4 @@ const likepost: RequestHandler = async (
   }
 };
 
-export { createPost, likepost, getHomePosts, getonepost };
+export { createPost, likepost, getHomePosts, getonepost, unlikepost };

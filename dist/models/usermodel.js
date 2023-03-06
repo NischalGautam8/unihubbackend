@@ -7,12 +7,10 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const User = new mongoose_1.default.Schema({
     username: {
         type: String,
-        unique: true,
-        maxlength: 25,
     },
+    googleId: String,
     password: {
         type: String,
-        required: true,
     },
     firstName: {
         type: String,

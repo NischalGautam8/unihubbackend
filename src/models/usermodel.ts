@@ -3,12 +3,10 @@ const User = new mongoose.Schema(
   {
     username: {
       type: String,
-      unique: true,
-      maxlength: 25,
     },
+    googleId: String,
     password: {
       type: String,
-      required: true,
     },
     firstName: {
       type: String,

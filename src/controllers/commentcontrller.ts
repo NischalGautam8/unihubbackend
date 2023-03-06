@@ -46,13 +46,14 @@ const getcomments: RequestHandler = async (req: Request, res: Response) => {
       return res.status(400).json("unable to find post");
     } else {
       const commentidarr = post.comments;
-      const newarr: Array<commentinterface> = [];
+      var newarr: Array<commentinterface> = [];
       await Promise.all(
         commentidarr.map(async (element) => {
           const commentofpost: commentinterface = await Comment.findOne({
             _id: element,
           });
           newarr.push(commentofpost);
+          newarr = newarr.filter((element) => element != null);
           // console.log(commentofpost);
         })
       );

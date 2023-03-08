@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getcomments = exports.createcomment = void 0;
+exports.createReply = exports.getcomments = exports.createcomment = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const commentmodel_1 = __importDefault(require("../models/commentmodel"));
 const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -27,6 +27,9 @@ const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const comment = yield commentmodel_1.default.create({
                 content: content,
                 user: userid,
+                lastName: req.body.lastName,
+                firstName: req.body.firstName,
+                username: req.body.username,
                 postid: postid,
             });
             if (!comment) {
@@ -61,7 +64,7 @@ const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 const commentofpost = yield commentmodel_1.default.findOne({
                     _id: element,
                 });
-                newarr.push(commentofpost);
+                commentofpost && newarr.push(commentofpost);
                 newarr = newarr.filter((element) => element != null);
                 // console.log(commentofpost);
             })));
@@ -74,3 +77,31 @@ const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getcomments = getcomments;
+const createReply = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const newreply = yield commentmodel_1.default.create({
+            content: req.body.content,
+            user: req.body.userid,
+            lastName: req.body.lastName,
+            firstName: req.body.firstName,
+            username: req.body.username,
+            postid: req.params.id, //this time the post will be another comment
+        });
+        if (!newreply) {
+            return res.status(500).json("unable to create a new comment");
+        }
+        const reply = yield commentmodel_1.default.findOneAndUpdate({ _id: req.params.id }, //id for comment to which we want to reply
+        {
+            $push: { replies: newreply._id },
+        });
+        if (!reply) {
+            return res.status(500).json("unable to create a reply");
+        }
+        res.status(200).json("reply added to the comment");
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ msg: err });
+    }
+});
+exports.createReply = createReply;

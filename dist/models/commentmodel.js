@@ -11,10 +11,15 @@ const Comment = new mongoose_1.default.Schema({
         type: mongoose_1.default.Types.ObjectId,
         ref: "User",
     },
+    username: String,
+    commentimage: String,
+    firstName: String,
+    lastName: String,
     postid: {
         type: mongoose_1.default.Types.ObjectId,
         ref: "Post",
     },
+    replies: [{ type: mongoose_1.default.Types.ObjectId, ref: "comment" }],
 }, { timestamps: true });
 const comment = mongoose_1.default.model("Comment", Comment);
 exports.default = comment;

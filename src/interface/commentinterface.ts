@@ -6,4 +6,5 @@ export interface commentinterface extends Document {
   postid: string;
   createdAt: string;
   likes: Array<string>;
+  replies: Array<commentinterface>;
 }

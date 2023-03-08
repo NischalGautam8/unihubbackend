@@ -1,7 +1,7 @@
 import { commentinterface } from "../interface/commentinterface";
 import mongoose from "mongoose";
 import Post from "../models/postmodel";
-import { Request, Response, RequestHandler } from "express";
+import { Request, Response, RequestHandler, NextFunction } from "express";
 import Comment from "../models/commentmodel";
 import { postinterface } from "../interface/postinterface";
 import comment from "../models/commentmodel";
@@ -16,6 +16,9 @@ const createcomment: RequestHandler = async (req: Request, res: Response) => {
       const comment = await Comment.create({
         content: content,
         user: userid,
+        lastName: req.body.lastName,
+        firstName: req.body.firstName,
+        username: req.body.username,
         postid: postid,
       });
       if (!comment) {
@@ -41,7 +44,7 @@ const getcomments: RequestHandler = async (req: Request, res: Response) => {
     const postid = req.params.id;
     console.log(postid);
 
-    const post: postinterface = await Post.findOne({ _id: postid });
+    const post: postinterface | null = await Post.findOne({ _id: postid });
     if (!post) {
       return res.status(400).json("unable to find post");
     } else {
@@ -49,10 +52,10 @@ const getcomments: RequestHandler = async (req: Request, res: Response) => {
       var newarr: Array<commentinterface> = [];
       await Promise.all(
         commentidarr.map(async (element) => {
-          const commentofpost: commentinterface = await Comment.findOne({
+          const commentofpost: commentinterface | null = await Comment.findOne({
             _id: element,
           });
-          newarr.push(commentofpost);
+          commentofpost && newarr.push(commentofpost);
           newarr = newarr.filter((element) => element != null);
           // console.log(commentofpost);
         })
@@ -64,6 +67,34 @@ const getcomments: RequestHandler = async (req: Request, res: Response) => {
     console.log(err);
   }
 };
+const createReply = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const newreply = await Comment.create({
+      content: req.body.content,
+      user: req.body.userid,
+      lastName: req.body.lastName,
+      firstName: req.body.firstName,
+      username: req.body.username,
+      postid: req.params.id, //this time the post will be another comment
+    });
+    if (!newreply) {
+      return res.status(500).json("unable to create a new comment");
+    }
+    const reply = await Comment.findOneAndUpdate(
+      { _id: req.params.id }, //id for comment to which we want to reply
+      {
+        $push: { replies: newreply._id },
+      }
+    );
+    if (!reply) {
+      return res.status(500).json("unable to create a reply");
+    }
+    res.status(200).json("reply added to the comment");
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: err });
+  }
+};
 //like comment
 //may be jump onto making the ui now make a news feed
-export { createcomment, getcomments };
+export { createcomment, getcomments, createReply };

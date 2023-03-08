@@ -12,12 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createReply = exports.getcomments = exports.createcomment = void 0;
+exports.getReply = exports.createReply = exports.getcomments = exports.createcomment = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const commentmodel_1 = __importDefault(require("../models/commentmodel"));
+const commentmodel_2 = __importDefault(require("../models/commentmodel"));
 const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { content, userid, postid } = req.body;
+        const postid = req.params.id;
+        const { content, userid, } = req.body;
         const post = postmodel_1.default.findOne({ _id: postid });
         console.log(typeof userid, typeof postid);
         if (!post) {
@@ -105,3 +107,27 @@ const createReply = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.createReply = createReply;
+const getReply = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const commentid = req.params.id;
+        const thatcomment = yield commentmodel_2.default.findOne({ _id: commentid });
+        if (!thatcomment) {
+            return res.status(404).json("comment doesnot exist");
+        }
+        var newArr = [];
+        console.log("replies", thatcomment);
+        const repliesIdArr = thatcomment.replies;
+        console.log(repliesIdArr);
+        yield Promise.all(repliesIdArr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
+            const singlereply = yield commentmodel_2.default.findOne({ _id: element });
+            singlereply && newArr.push(singlereply);
+            newArr = newArr.filter(element => element != null);
+        })));
+        res.status(200).json({ msg: newArr });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ msg: err });
+    }
+});
+exports.getReply = getReply;

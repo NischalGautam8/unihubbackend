@@ -15,8 +15,9 @@ routing.route("/posts/unlike/:id").post(postcontroller_1.unlikepost);
 routing.route("/register").post(usercontroller_1.register);
 routing.route("/login").post(usercontroller_1.login);
 routing.route("/comment/:id").get(commentcontrller_1.getcomments);
-routing.route("/comment").post(commentcontrller_1.createcomment);
+routing.route("/comment/:id").post(commentcontrller_1.createcomment);
 routing.route("/reply/:id").post(commentcontrller_1.createReply);
+routing.route("/reply/:id").get(commentcontrller_1.getReply);
 routing.route("/generate").post(usercontroller_1.generatenewacesstoken);
 // routing.get("/protected", (req, res) => {
 //   res.send("hello" + req.user);

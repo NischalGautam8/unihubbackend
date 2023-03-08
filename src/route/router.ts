@@ -10,6 +10,7 @@ import {
 import {
   createcomment,
   createReply,
+  getReply
   getcomments,
 } from "../controllers/commentcontrller";
 import {
@@ -24,8 +25,9 @@ routing.route("/posts/unlike/:id").post(unlikepost);
 routing.route("/register").post(register);
 routing.route("/login").post(login);
 routing.route("/comment/:id").get(getcomments);
-routing.route("/comment").post(createcomment);
+routing.route("/comment/:id").post(createcomment);
 routing.route("/reply/:id").post(createReply);
+routing.route("/reply/:id").get(getReply);
 routing.route("/generate").post(generatenewacesstoken);
 // routing.get("/protected", (req, res) => {
 //   res.send("hello" + req.user);

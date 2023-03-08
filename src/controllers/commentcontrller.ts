@@ -1,13 +1,15 @@
 import { commentinterface } from "../interface/commentinterface";
 import mongoose from "mongoose";
 import Post from "../models/postmodel";
-import { Request, Response, RequestHandler, NextFunction } from "express";
+import { Request, Response, RequestHandler, NextFunction, request } from "express";
 import Comment from "../models/commentmodel";
 import { postinterface } from "../interface/postinterface";
 import comment from "../models/commentmodel";
+import comment from "../models/commentmodel";
 const createcomment: RequestHandler = async (req: Request, res: Response) => {
   try {
-    const { content, userid, postid } = req.body;
+    const postid:string=req.params.id;
+    const { content, userid,  } = req.body;
     const post = Post.findOne({ _id: postid });
     console.log(typeof userid, typeof postid);
     if (!post) {
@@ -95,6 +97,33 @@ const createReply = async (req: Request, res: Response, next: NextFunction) => {
     res.status(500).json({ msg: err });
   }
 };
+const getReply:RequestHandler=async (req:Request,res:Response,next:NextFunction)=>{
+try{
+
+  const commentid=req.params.id;
+  const thatcomment:commentinterface|null=await comment.findOne({_id:commentid});
+  if(!thatcomment){
+    return res.status(404).json("comment doesnot exist");
+  }
+  var newArr:Array<commentinterface> =[];
+  console.log("replies",thatcomment)
+  const repliesIdArr=thatcomment.replies;
+  console.log(repliesIdArr)
+ await Promise.all(
+  repliesIdArr.map(async(element)=>{
+    const singlereply=await comment.findOne({_id:element});
+    singlereply && newArr.push(singlereply);
+    newArr= newArr.filter(element=>element!=null);
+  })
+  )
+  res.status(200).json({msg:newArr});
+}catch(err){
+  console.log(err);
+  res.status(500).json({msg:err})
+}
+
+}
+
 //like comment
 //may be jump onto making the ui now make a news feed
-export { createcomment, getcomments, createReply };
+export { createcomment, getcomments, createReply,getReply };

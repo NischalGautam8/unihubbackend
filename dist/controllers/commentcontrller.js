@@ -19,7 +19,7 @@ const commentmodel_2 = __importDefault(require("../models/commentmodel"));
 const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const postid = req.params.id;
-        const { content, userid, } = req.body;
+        const { content, userid } = req.body;
         const post = postmodel_1.default.findOne({ _id: postid });
         console.log(typeof userid, typeof postid);
         if (!post) {
@@ -110,7 +110,9 @@ exports.createReply = createReply;
 const getReply = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const commentid = req.params.id;
-        const thatcomment = yield commentmodel_2.default.findOne({ _id: commentid });
+        const thatcomment = yield commentmodel_2.default.findOne({
+            _id: commentid,
+        });
         if (!thatcomment) {
             return res.status(404).json("comment doesnot exist");
         }
@@ -121,7 +123,7 @@ const getReply = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         yield Promise.all(repliesIdArr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
             const singlereply = yield commentmodel_2.default.findOne({ _id: element });
             singlereply && newArr.push(singlereply);
-            newArr = newArr.filter(element => element != null);
+            newArr = newArr.filter((element) => element != null);
         })));
         res.status(200).json({ msg: newArr });
     }

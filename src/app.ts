@@ -7,7 +7,6 @@ import passport from "passport";
 import bodyParser from "body-parser";
 import GoogleStrategy from "./passportmiddleware";
 app.use(bodyParser.urlencoded({ extended: false }));
-// parse application/json
 app.use(bodyParser.json());
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,6 +16,18 @@ app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 mongoose.set("strictQuery", false);
+import http from "http";
+const httpserver = http.createServer(app);
+import { Server } from "socket.io";
+const io = new Server(httpserver, {
+  cors: {
+    origin: "https://localhost:3000",
+    methods: ["GET", "POST"],
+  },
+});
+io.on("connection", (socket) => {
+  console.log("user connected", socket.id);
+});
 app.use("/api", routing);
 app.get(
   "/auth/google",

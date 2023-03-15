@@ -11,7 +11,6 @@ const router_1 = __importDefault(require("./route/router"));
 const passport_1 = __importDefault(require("passport"));
 const body_parser_1 = __importDefault(require("body-parser"));
 app.use(body_parser_1.default.urlencoded({ extended: false }));
-// parse application/json
 app.use(body_parser_1.default.json());
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -21,6 +20,26 @@ app.use((0, express_session_1.default)({ secret: "cats", resave: false, saveUnin
 app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
 mongoose_1.default.set("strictQuery", false);
+const http_1 = __importDefault(require("http"));
+const httpserver = http_1.default.createServer(app);
+const socket_io_1 = require("socket.io");
+const io = new socket_io_1.Server(httpserver, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+    },
+});
+io.on("connection", (socket) => {
+    console.log("user connected", socket.id);
+    socket.on("join_room", (data) => {
+        socket.join(data);
+        console.log("joined room ", data);
+    });
+    socket.on("send_message", (data) => {
+        console.log(data);
+        socket.to(data.room).emit("receive_message", data);
+    });
+});
 app.use("/api", router_1.default);
 app.get("/auth/google", passport_1.default.authenticate("google", { scope: ["profile"] }));
 app.get("/auth/callback", passport_1.default.authenticate("google", {
@@ -33,7 +52,7 @@ const start = () => {
     try {
         mongoose_1.default
             .connect("mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority")
-            .then(() => app.listen(5000, () => console.log("connected to the database & listening to port")));
+            .then(() => httpserver.listen(5000, () => console.log("connected to the database & listening to port")));
     }
     catch (err) {
         console.log(err);

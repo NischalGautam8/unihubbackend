@@ -6,6 +6,7 @@ dotenv.config();
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import { userinterface } from "../interface/userinterface";
 const register: RequestHandler = async (req: Request, res: Response) => {
   try {
     if (req.body.password.length < 6) {
@@ -16,7 +17,7 @@ const register: RequestHandler = async (req: Request, res: Response) => {
     if (!req.body.username) {
       return res.status(400).json("username is required");
     }
-    const user = await usermodel.create(
+    const user: userinterface = await usermodel.create(
       {
         username: req.body.username,
         lastName: req.body.lastName,
@@ -38,7 +39,17 @@ const register: RequestHandler = async (req: Request, res: Response) => {
         user: new mongoose.Types.ObjectId(user._id),
       });
       console.log(refresh_token, acess_token, tokeninserted);
-      return res.status(200).json({ refresh_token, acess_token });
+      console.log(user);
+      return res.status(200).json({
+        user: {
+          username: user.username,
+          lastName: user.lastName,
+          firstName: user.firstName,
+          userid: user._id,
+        },
+        refresh_token,
+        acess_token,
+      });
     }
   } catch (err) {
     console.log(err);
@@ -56,7 +67,16 @@ const login = async (req: Request, res: Response) => {
     } else {
       const acess_token = createAcessToken({ id: result._id });
       const refresh_token = createRefreshToken({ id: result._id });
-      return res.status(200).json({ acess_token, refresh_token });
+      return res.status(200).json({
+        user: {
+          username: result.username,
+          lastName: result.lastName,
+          firstName: result.firstName,
+          userid: result._id,
+        },
+        acess_token,
+        refresh_token,
+      });
     }
   }
 };

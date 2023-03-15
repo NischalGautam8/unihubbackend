@@ -21,12 +21,20 @@ const httpserver = http.createServer(app);
 import { Server } from "socket.io";
 const io = new Server(httpserver, {
   cors: {
-    origin: "https://localhost:3000",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
+  socket.on("join_room", (data) => {
+    socket.join(data);
+    console.log("joined room ", data);
+  });
+  socket.on("send_message", (data) => {
+    console.log(data);
+    socket.to(data.room).emit("receive_message", data);
+  });
 });
 app.use("/api", routing);
 app.get(
@@ -51,7 +59,7 @@ const start = () => {
         "mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority"
       )
       .then(() =>
-        app.listen(5000, () =>
+        httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")
         )
       );

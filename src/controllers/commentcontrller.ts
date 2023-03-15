@@ -11,7 +11,6 @@ import {
 import Comment from "../models/commentmodel";
 import { postinterface } from "../interface/postinterface";
 import comment from "../models/commentmodel";
-import comment from "../models/commentmodel";
 const createcomment: RequestHandler = async (req: Request, res: Response) => {
   try {
     const postid: string = req.params.id;

@@ -50,7 +50,17 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 user: new mongoose_1.default.Types.ObjectId(user._id),
             });
             console.log(refresh_token, acess_token, tokeninserted);
-            return res.status(200).json({ refresh_token, acess_token });
+            console.log(user);
+            return res.status(200).json({
+                user: {
+                    username: user.username,
+                    lastName: user.lastName,
+                    firstName: user.firstName,
+                    userid: user._id,
+                },
+                refresh_token,
+                acess_token,
+            });
         }
     }
     catch (err) {
@@ -72,7 +82,16 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         else {
             const acess_token = createAcessToken({ id: result._id });
             const refresh_token = createRefreshToken({ id: result._id });
-            return res.status(200).json({ acess_token, refresh_token });
+            return res.status(200).json({
+                user: {
+                    username: result.username,
+                    lastName: result.lastName,
+                    firstName: result.firstName,
+                    userid: result._id,
+                },
+                acess_token,
+                refresh_token,
+            });
         }
     }
 });

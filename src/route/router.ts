@@ -30,8 +30,10 @@ routing.route("/posts/like/:id").post(likepost);
 routing.route("/posts/unlike/:id").post(unlikepost);
 routing.route("/register").post(register);
 routing.route("/login").post(login);
+//get conversations a user is involved in with userid
 routing.route("/conversation").get(getConversations).post(createConversation);
-routing.route("/convoandmessage").post(getConversationAndMessages);
+//get a single conversation and it's last 25 messages based on coversation id
+routing.route("/convoandmessage/:id").get(getConversationAndMessages);
 routing.route("/messeges").post(createMessage);
 routing.route("/comment/:id").get(getcomments);
 routing.route("/comment/:id").post(createcomment);

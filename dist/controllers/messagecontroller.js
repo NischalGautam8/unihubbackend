@@ -33,51 +33,67 @@ const createConversation = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.createConversation = createConversation;
 const createMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const message = yield messagemodel_1.default.create({
-        conversation: req.body.conversationid,
-        content: req.body.content,
-        sender: req.body.userid,
-        receiver: req.body.receiver,
-    });
-    if (!message) {
-        return res.status(400).json("unable to add message");
+    try {
+        const message = yield messagemodel_1.default.create({
+            conversation: req.body.conversationid,
+            content: req.body.content,
+            sender: req.body.sender,
+            receiver: req.body.receiver,
+        });
+        if (!message) {
+            return res.status(400).json("unable to add message");
+        }
+        const updated = yield conversationmodel_1.default.findOneAndUpdate({
+            _id: req.body.conversationid,
+        }, {
+            $push: { messages: message._id },
+        });
+        console.log(updated);
+        if (!updated) {
+            return res
+                .status(400)
+                .json("could not update conversation with message id");
+        }
+        return res.status(200).json("new message created");
     }
-    const updated = yield conversationmodel_1.default.findOneAndUpdate({
-        _id: req.body.conversationid,
-    }, {
-        $push: { messages: message._id },
-    });
-    console.log(updated);
-    if (!updated) {
-        return res
-            .status(400)
-            .json("could not update conversation with message id");
+    catch (err) {
+        console.log(err);
     }
-    return res.status(200).json("new message created");
 });
 exports.createMessage = createMessage;
 const getConversationAndMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const conversationid = req.body.conversationid;
-    const page = Number(req.query.page) || 1;
-    const skip = 25 * (page - 1);
-    const conversation = yield conversationmodel_1.default
-        .findOne({ _id: conversationid })
-        .populate({ path: "messages", options: { limit: 25, skip: skip } });
-    if (!conversation) {
-        return res.status(400).json("couldnot find convo");
+    try {
+        const conversationid = req.params.id;
+        const page = Number(req.query.page) || 1;
+        const skip = 25 * (page - 1);
+        const conversation = yield conversationmodel_1.default
+            .findOne({ _id: conversationid })
+            .populate({ path: "messages", options: { limit: 25, skip: skip } })
+            .populate("users", "-password -followers -following -createdAt -updatedAt");
+        if (!conversation) {
+            return res.status(400).json("couldnot find convo");
+        }
+        return res.status(200).json({ conversation });
     }
-    return res.status(200).json({ conversation });
+    catch (err) {
+        console.log(err);
+    }
 });
 exports.getConversationAndMessages = getConversationAndMessages;
 const getConversations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userid = req.query.userid;
-    console.log(userid);
-    const conversations = yield conversationmodel_1.default.find({
-        users: { $elemMatch: { $eq: userid } },
-    });
-    if (!conversations) {
-        return res.status(400).json("cannot find conversations");
+    try {
+        const userid = req.query.userid;
+        console.log(userid);
+        const conversations = yield conversationmodel_1.default.find({
+            users: { $elemMatch: { $eq: userid } },
+        });
+        if (!conversations) {
+            return res.status(400).json("cannot find conversations");
+        }
+        return res.status(200).json(conversations);
     }
-    return res.status(200).json(conversations);
+    catch (err) {
+        console.log(err);
+    }
 });
 exports.getConversations = getConversations;

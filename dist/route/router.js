@@ -15,8 +15,10 @@ routing.route("/posts/like/:id").post(postcontroller_1.likepost);
 routing.route("/posts/unlike/:id").post(postcontroller_1.unlikepost);
 routing.route("/register").post(usercontroller_1.register);
 routing.route("/login").post(usercontroller_1.login);
+//get conversations a user is involved in with userid
 routing.route("/conversation").get(messagecontroller_1.getConversations).post(messagecontroller_1.createConversation);
-routing.route("/convoandmessage").post(messagecontroller_1.getConversationAndMessages);
+//get a single conversation and it's last 25 messages based on coversation id
+routing.route("/convoandmessage/:id").get(messagecontroller_1.getConversationAndMessages);
 routing.route("/messeges").post(messagecontroller_1.createMessage);
 routing.route("/comment/:id").get(commentcontrller_1.getcomments);
 routing.route("/comment/:id").post(commentcontrller_1.createcomment);

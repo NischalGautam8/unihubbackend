@@ -7,6 +7,8 @@ import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { userinterface } from "../interface/userinterface";
+import getDataUri from "../../utils/dataUri";
+import cloudinary from "cloudinary";
 const register: RequestHandler = async (req: Request, res: Response) => {
   try {
     if (req.body.password.length < 6) {
@@ -41,12 +43,7 @@ const register: RequestHandler = async (req: Request, res: Response) => {
       console.log(refresh_token, acess_token, tokeninserted);
       console.log(user);
       return res.status(200).json({
-        user: {
-          username: user.username,
-          lastName: user.lastName,
-          firstName: user.firstName,
-          userid: user._id,
-        },
+        user,
         refresh_token,
         acess_token,
       });
@@ -107,4 +104,69 @@ const generatenewacesstoken: RequestHandler = async (
     console.log(err);
   }
 };
-export { register, login, generatenewacesstoken };
+const getFollwing = async (req: Request, res: Response) => {
+  try {
+    const following = await usermodel
+      .findOne({ _id: req.params.id })
+      .populate("following", "-password -followers  -createdAt -updatedAt");
+    if (!following) {
+      return res.status(404).json("cannot get following");
+    }
+    return res.status(200).json({ following: following.following });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+};
+const uploadProfilePic = async (req: any, res: Response) => {
+  try {
+    const f = req.file;
+    console.log(f);
+    const fileUri = getDataUri(f);
+    const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
+    console.log(mycloud.secure_url);
+    const update = await usermodel.findByIdAndUpdate(
+      { _id: req.body.id },
+      {
+        profilepic: mycloud.secure_url,
+      }
+    );
+    res.status(200).json("hi");
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+};
+const follow = async (req: Request, res: Response) => {
+  try {
+    //to follow id on params
+    const follow = await usermodel.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        $push: { followers: req.body.id }, //body ma userid
+      }
+    );
+    if (follow) {
+      const following = await usermodel.findOneAndUpdate(
+        { _id: req.body.id },
+        {
+          $push: { following: req.params.id },
+        }
+      );
+      if (!following) {
+        return res.status(400).json("unable to add to following");
+      }
+      return res.status(200).json("followed");
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+export {
+  register,
+  login,
+  generatenewacesstoken,
+  uploadProfilePic,
+  getFollwing,
+  follow,
+};

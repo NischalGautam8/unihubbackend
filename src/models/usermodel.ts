@@ -3,6 +3,10 @@ const User = new mongoose.Schema(
   {
     username: {
       type: String,
+      unique: true,
+    },
+    profilepic: {
+      type: String,
     },
     googleId: String,
     password: {

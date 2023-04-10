@@ -10,6 +10,7 @@ const express_session_1 = __importDefault(require("express-session"));
 const router_1 = __importDefault(require("./route/router"));
 const passport_1 = __importDefault(require("passport"));
 const body_parser_1 = __importDefault(require("body-parser"));
+const cloudinary_1 = __importDefault(require("cloudinary"));
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -23,9 +24,16 @@ mongoose_1.default.set("strictQuery", false);
 const http_1 = __importDefault(require("http"));
 const httpserver = http_1.default.createServer(app);
 const socket_io_1 = require("socket.io");
+const messagecontroller_1 = require("./controllers/messagecontroller");
+//cloudinary setup
+cloudinary_1.default.v2.config({
+    cloud_name: "ds8b7v9pf",
+    api_key: "551468213196962",
+    api_secret: "pUMlJl1SsKS3ap_sOQbPl66idkg",
+});
 const io = new socket_io_1.Server(httpserver, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: ["http://localhost:3000", "http://localhost:3001"],
         methods: ["GET", "POST"],
     },
 });
@@ -33,11 +41,13 @@ io.on("connection", (socket) => {
     console.log("user connected", socket.id);
     socket.on("join_room", (data) => {
         socket.join(data);
+        ///TODO:JWT authenticate on room join
         console.log("joined room ", data);
     });
     socket.on("send_message", (data) => {
         console.log(data);
-        socket.emit("receive_message", data);
+        (0, messagecontroller_1.newMessageSocket)(data.message, data.room, data.sender, data.receiver); //to insert the message to the db
+        socket.broadcast.emit("receive_message", data);
     });
 });
 app.use("/api", router_1.default);

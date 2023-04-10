@@ -5,6 +5,7 @@ import session from "express-session";
 import routing from "./route/router";
 import passport from "passport";
 import bodyParser from "body-parser";
+import cloudinary from "cloudinary";
 import GoogleStrategy from "./passportmiddleware";
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -19,9 +20,16 @@ mongoose.set("strictQuery", false);
 import http from "http";
 const httpserver = http.createServer(app);
 import { Server } from "socket.io";
+import { newMessageSocket } from "./controllers/messagecontroller";
+//cloudinary setup
+cloudinary.v2.config({
+  cloud_name: "ds8b7v9pf",
+  api_key: "551468213196962",
+  api_secret: "pUMlJl1SsKS3ap_sOQbPl66idkg",
+});
 const io = new Server(httpserver, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST"],
   },
 });
@@ -29,11 +37,13 @@ io.on("connection", (socket) => {
   console.log("user connected", socket.id);
   socket.on("join_room", (data) => {
     socket.join(data);
+    ///TODO:JWT authenticate on room join
     console.log("joined room ", data);
   });
   socket.on("send_message", (data) => {
     console.log(data);
-    socket.emit("receive_message", data);
+    newMessageSocket(data.message, data.room, data.sender, data.receiver); //to insert the message to the db
+    socket.broadcast.emit("receive_message", data);
   });
 });
 app.use("/api", routing);

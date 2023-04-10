@@ -2,13 +2,40 @@ import mongoose from "mongoose";
 import { Request, Response, RequestHandler } from "express";
 import conversationmodel from "../models/conversationmodel";
 import messageModel from "../models/messagemodel";
+import { userinterface } from "../interface/userinterface";
+const newMessageSocket = async (
+  messageData: string,
+  room: string,
+  sender: string,
+  receiver: string
+) => {
+  try {
+    const message = await messageModel.create({
+      conversation: room,
+      content: messageData,
+      sender,
+      receiver,
+    });
+    if (message) {
+      const conversation = await conversationmodel.findOneAndUpdate(
+        { _id: room },
+        {
+          $push: { messages: message._id },
+        }
+      );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
 const createConversation: RequestHandler = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const { name, users } = req.body;
-
+    const { name, users }: { name: string; users: Array<userinterface> } =
+      req.body;
+    console.log("name", name, users);
     const newConversation = await conversationmodel.create({
       name: name,
       users: users,
@@ -17,7 +44,7 @@ const createConversation: RequestHandler = async (
       return res.status(400).json("cannot create a new conversation");
     }
 
-    return res.status(200).json("created a new convo");
+    return res.status(200).json(newConversation);
   } catch (err) {
     console.log(err);
   }
@@ -92,4 +119,5 @@ export {
   getConversations,
   getConversationAndMessages,
   createMessage,
+  newMessageSocket,
 };

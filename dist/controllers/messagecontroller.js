@@ -12,12 +12,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMessage = exports.getConversationAndMessages = exports.getConversations = exports.createConversation = void 0;
+exports.newMessageSocket = exports.createMessage = exports.getConversationAndMessages = exports.getConversations = exports.createConversation = void 0;
 const conversationmodel_1 = __importDefault(require("../models/conversationmodel"));
 const messagemodel_1 = __importDefault(require("../models/messagemodel"));
+const newMessageSocket = (messageData, room, sender, receiver) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const message = yield messagemodel_1.default.create({
+            conversation: room,
+            content: messageData,
+            sender,
+            receiver,
+        });
+        if (message) {
+            const conversation = yield conversationmodel_1.default.findOneAndUpdate({ _id: room }, {
+                $push: { messages: message._id },
+            });
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.newMessageSocket = newMessageSocket;
 const createConversation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, users } = req.body;
+        console.log("name", name, users);
         const newConversation = yield conversationmodel_1.default.create({
             name: name,
             users: users,
@@ -25,7 +45,7 @@ const createConversation = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!newConversation) {
             return res.status(400).json("cannot create a new conversation");
         }
-        return res.status(200).json("created a new convo");
+        return res.status(200).json(newConversation);
     }
     catch (err) {
         console.log(err);

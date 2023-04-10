@@ -9,12 +9,17 @@ const postcontroller_1 = require("../controllers/postcontroller");
 const messagecontroller_1 = require("../controllers/messagecontroller");
 const commentcontrller_1 = require("../controllers/commentcontrller");
 const usercontroller_1 = require("../controllers/usercontroller");
+const multer_1 = require("../controllers/multer");
 routing.route("/posts").post(postcontroller_1.createPost).get(postcontroller_1.getHomePosts);
 routing.route("/posts/:id").get(postcontroller_1.getonepost);
 routing.route("/posts/like/:id").post(postcontroller_1.likepost);
 routing.route("/posts/unlike/:id").post(postcontroller_1.unlikepost);
 routing.route("/register").post(usercontroller_1.register);
 routing.route("/login").post(usercontroller_1.login);
+routing.route("/follow/:id").post(usercontroller_1.follow);
+routing.route("/uploadprofilepic").post(multer_1.singleUpload, usercontroller_1.uploadProfilePic);
+//get following of a user
+routing.route("/following/:id").get(usercontroller_1.getFollwing);
 //get conversations a user is involved in with userid
 routing.route("/conversation").get(messagecontroller_1.getConversations).post(messagecontroller_1.createConversation);
 //get a single conversation and it's last 25 messages based on coversation id

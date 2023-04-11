@@ -1,5 +1,6 @@
 import express from "express";
 const routing = express.Router();
+import { uploadNote } from "../controllers/notescontroller";
 import {
   createPost,
   likepost,
@@ -37,6 +38,8 @@ routing.route("/login").post(login);
 routing.route("/follow/:id").post(follow);
 routing.route("/uploadprofilepic").post(singleUpload, uploadProfilePic);
 //get following of a user
+//NOTES////
+routing.route("/uploadnote").post(singleUpload, uploadNote);
 routing.route("/following/:id").get(getFollwing);
 //get conversations a user is involved in with userid
 

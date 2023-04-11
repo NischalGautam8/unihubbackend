@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { userinterface } from "../interface/userinterface";
-import getDataUri from "../../utils/dataUri";
+import getDataUri from "../utils/dataUri";
 import cloudinary from "cloudinary";
 const register: RequestHandler = async (req: Request, res: Response) => {
   try {

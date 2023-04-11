@@ -20,7 +20,7 @@ dotenv_1.default.config();
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const dataUri_1 = __importDefault(require("../../utils/dataUri"));
+const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

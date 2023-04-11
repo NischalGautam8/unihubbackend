@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const routing = express_1.default.Router();
+const notescontroller_1 = require("../controllers/notescontroller");
 const postcontroller_1 = require("../controllers/postcontroller");
 const messagecontroller_1 = require("../controllers/messagecontroller");
 const commentcontrller_1 = require("../controllers/commentcontrller");
@@ -19,6 +20,8 @@ routing.route("/login").post(usercontroller_1.login);
 routing.route("/follow/:id").post(usercontroller_1.follow);
 routing.route("/uploadprofilepic").post(multer_1.singleUpload, usercontroller_1.uploadProfilePic);
 //get following of a user
+//NOTES////
+routing.route("/uploadnote").post(multer_1.singleUpload, notescontroller_1.uploadNote);
 routing.route("/following/:id").get(usercontroller_1.getFollwing);
 //get conversations a user is involved in with userid
 routing.route("/conversation").get(messagecontroller_1.getConversations).post(messagecontroller_1.createConversation);

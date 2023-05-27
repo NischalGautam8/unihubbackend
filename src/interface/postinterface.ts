@@ -1,9 +1,11 @@
 import { Document } from "mongoose";
+import { userinterface } from "./userinterface";
 export interface postinterface extends Document {
+  _id:string;
+  createdAt:string;
+  updatedAt:string;
   description: String;
-  firstName: String;
-  lastName: String;
-  userId: String;
-  comments: Array<String>;
-  likes: Array<String>;
+  userId: userinterface;
+  commentsCount: number;
+  likesCount: number;
 }

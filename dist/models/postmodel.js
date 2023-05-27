@@ -10,16 +10,9 @@ const Post = new mongoose_1.default.Schema({
         required: [true, "description is must"],
     },
     userId: {
-        type: String,
+        type: mongoose_1.default.Types.ObjectId,
+        ref: "User",
         required: [true, "userid is required"],
-    },
-    firstName: {
-        type: String,
-        required: true,
-    },
-    lastName: {
-        type: String,
-        required: true,
     },
     likes: [{ type: mongoose_1.default.Types.ObjectId, ref: "User" }],
     comments: [{ type: mongoose_1.default.Types.ObjectId, ref: "Comment" }],

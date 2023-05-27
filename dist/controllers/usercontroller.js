@@ -18,7 +18,6 @@ const refreshtoken_1 = __importDefault(require("../models/refreshtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const mongoose_1 = __importDefault(require("mongoose"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -32,6 +31,15 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!req.body.username) {
             return res.status(400).json("username is required");
         }
+        if (!req.body.firstName) {
+            return res.status(400).json("firstName is required");
+        }
+        if (!req.body.lastName) {
+            return res.status(400).json("lastName is required");
+        }
+        const usernametaken = yield usermodel_1.default.findOne({ username: req.body.username });
+        if (usernametaken)
+            return res.status(400).json({ err: "username is already taken" });
         const user = yield usermodel_1.default.create({
             username: req.body.username,
             lastName: req.body.lastName,
@@ -39,22 +47,27 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             email: req.body.email,
             gender: req.body.gender,
             password: yield bcrypt_1.default.hash(req.body.password, 10),
-        }, { new: true });
+        });
         if (!user) {
             res.status(400).json("unable to create user");
         }
         else {
-            console.log("user:", user);
+            console.log("user", user);
+            const toreturn = {
+                _id: user._id,
+                username: user.username,
+                lastName: user.lastName,
+                firstName: user.firstName,
+            };
+            // console.log("toreturn",toreturn);
             const acess_token = createAcessToken({ id: user._id });
             const refresh_token = createRefreshToken({ id: user._id });
             const tokeninserted = yield refreshtoken_1.default.create({
                 token: refresh_token,
-                user: new mongoose_1.default.Types.ObjectId(user._id),
+                user: user._id,
             });
-            console.log(refresh_token, acess_token, tokeninserted);
-            console.log(user);
             return res.status(200).json({
-                user,
+                user: toreturn,
                 refresh_token,
                 acess_token,
             });
@@ -73,7 +86,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return res.status(404).json({ err: "no user found" });
     }
     else {
-        if (!(yield bcrypt_1.default.compare(password, result.password))) {
+        if (!(bcrypt_1.default.compare(password, result.password))) {
             res.status(500).json({ msg: "wrong password" });
         }
         else {
@@ -111,7 +124,6 @@ const generatenewacesstoken = (req, res) => __awaiter(void 0, void 0, void 0, fu
             return res.status(400).json({ err: "invalid refresh token" });
         }
         const acesstoken = createAcessToken({ _id: refTokenOnDB.user });
-        console.log(acesstoken);
         return res.status(200).json({ acesstoken });
     }
     catch (err) {
@@ -138,10 +150,8 @@ exports.getFollwing = getFollwing;
 const uploadProfilePic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const f = req.file;
-        console.log(f);
         const fileUri = (0, dataUri_1.default)(f);
         const mycloud = yield cloudinary_1.default.v2.uploader.upload(fileUri.content);
-        console.log(mycloud.secure_url);
         const update = yield usermodel_1.default.findByIdAndUpdate({ _id: req.body.id }, {
             profilepic: mycloud.secure_url,
         });

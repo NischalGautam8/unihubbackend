@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getReply = exports.createReply = exports.getcomments = exports.createcomment = void 0;
+exports.getNotesComment = exports.createNotesComment = exports.getReply = exports.createReply = exports.getcomments = exports.createcomment = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const commentmodel_1 = __importDefault(require("../models/commentmodel"));
 const commentmodel_2 = __importDefault(require("../models/commentmodel"));
+const notesmodel_1 = __importDefault(require("../models/notesmodel"));
 const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const postid = req.params.id;
@@ -29,9 +30,6 @@ const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const comment = yield commentmodel_1.default.create({
                 content: content,
                 user: userid,
-                lastName: req.body.lastName,
-                firstName: req.body.firstName,
-                username: req.body.username,
                 postid: postid,
             });
             if (!comment) {
@@ -51,28 +49,73 @@ const createcomment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.createcomment = createcomment;
-const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+//////Notes///////
+const createNotesComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const postid = req.params.id;
-        console.log(postid);
-        const post = yield postmodel_1.default.findOne({ _id: postid });
-        if (!post) {
-            return res.status(400).json("unable to find post");
+        const noteid = req.params.id;
+        const { content, userid } = req.body;
+        const note = notesmodel_1.default.findOne({ _id: noteid });
+        console.log(typeof userid, typeof noteid);
+        if (!note) {
+            return res.status(400).json({ msg: "no such note exists" });
         }
         else {
-            const commentidarr = post.comments;
-            var newarr = [];
-            yield Promise.all(commentidarr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
-                const commentofpost = yield commentmodel_1.default.findOne({
-                    _id: element,
-                });
-                commentofpost && newarr.push(commentofpost);
-                newarr = newarr.filter((element) => element != null);
-                // console.log(commentofpost);
-            })));
-            console.log(newarr);
-            res.status(200).json({ msg: newarr });
+            console.log(userid);
+            const comment = yield commentmodel_1.default.create({
+                content: content,
+                user: userid,
+                postid: noteid,
+            });
+            if (!comment) {
+                res.status(400).json({ msg: "unable to create a comment" });
+            }
+            else {
+                yield notesmodel_1.default.findOneAndUpdate({ _id: noteid }, {
+                    $push: { comments: comment._id },
+                }, { new: true });
+                res.status(200).json("comment added sucessfully");
+            }
         }
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ err: err });
+    }
+});
+exports.createNotesComment = createNotesComment;
+const getNotesComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const note = yield notesmodel_1.default.findOne({ _id: req.params.id }).populate({
+            path: "comments",
+            populate: {
+                path: "user",
+                select: "_id username lastName firstName",
+            },
+        });
+        if (note) {
+            return res.status(200).json({ msg: note.comments });
+        }
+        return res.status(400).json("note not found");
+    }
+    catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+});
+exports.getNotesComment = getNotesComment;
+const getcomments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const postcomments = yield postmodel_1.default.findOne({ _id: req.params.id }).populate({
+            path: "comments",
+            populate: {
+                path: "user",
+                select: "_id username lastName firstName",
+            },
+        });
+        if (postcomments) {
+            return res.status(200).json({ msg: postcomments.comments });
+        }
+        return res.status(400).json("post/comment not found");
     }
     catch (err) {
         console.log(err);
@@ -84,10 +127,7 @@ const createReply = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         const newreply = yield commentmodel_1.default.create({
             content: req.body.content,
             user: req.body.userid,
-            lastName: req.body.lastName,
-            firstName: req.body.firstName,
-            username: req.body.username,
-            postid: req.params.id, //this time the post will be another comment
+            postid: req.params.id, //this time the post will be another comment so provide comment id
         });
         if (!newreply) {
             return res.status(500).json("unable to create a new comment");
@@ -109,27 +149,20 @@ const createReply = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
 exports.createReply = createReply;
 const getReply = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const commentid = req.params.id;
-        const thatcomment = yield commentmodel_2.default.findOne({
-            _id: commentid,
+        const replies = yield commentmodel_2.default.findOne({ _id: req.params.id }).populate({
+            path: "replies",
+            populate: {
+                path: "user",
+                select: "_id username lastName firstName",
+            },
         });
-        if (!thatcomment) {
-            return res.status(404).json("comment doesnot exist");
+        if (replies) {
+            return res.status(200).json({ msg: replies.replies });
         }
-        var newArr = [];
-        console.log("replies", thatcomment);
-        const repliesIdArr = thatcomment.replies;
-        console.log(repliesIdArr);
-        yield Promise.all(repliesIdArr.map((element) => __awaiter(void 0, void 0, void 0, function* () {
-            const singlereply = yield commentmodel_2.default.findOne({ _id: element });
-            singlereply && newArr.push(singlereply);
-            newArr = newArr.filter((element) => element != null);
-        })));
-        res.status(200).json({ msg: newArr });
+        return res.status(400).json("post/comment not found");
     }
     catch (err) {
         console.log(err);
-        res.status(500).json({ msg: err });
     }
 });
 exports.getReply = getReply;

@@ -18,7 +18,10 @@ const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { id } = req.params;
         console.log(id);
-        const result = yield postmodel_1.default.findOne({ _id: id });
+        const result = yield postmodel_1.default.findOne({ _id: id }).populate({
+            path: "userId",
+            select: "_id username lastName firstName  ",
+        });
         if (!result) {
             return res.status(404).json("cannot find the post");
         }
@@ -34,31 +37,36 @@ const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getonepost = getonepost;
 const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = Number(req.params.page) || 1;
-    const posts = postmodel_1.default.find();
-    if (!posts) {
-        return res.status(400).json({ err: "unable to retrive posts" });
-    }
-    else {
-        const limit = 20;
-        const skip = (page - 1) * limit;
-        const postb = posts.skip(skip);
-        const posta = postb.limit(limit);
-        const toreturn = yield posta;
-        res.status(200).json({ msg: toreturn });
-    }
+    const userid = req.query.userid;
+    const postsQuery = postmodel_1.default.find().populate({
+        path: "userId",
+        select: "_id username lastName firstName"
+    });
+    //TODO : SEND likes and comment count sepertely
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+    const toreturn = yield postsQueryPaginated.exec();
+    const modifiedPosts = toreturn.map(post => {
+        const modifiedPost = post.toObject();
+        modifiedPost.commentsCount = post.comments.length;
+        modifiedPost.likesCount = post.likes.length;
+        modifiedPost.hasLiked = post.likes.includes(userid);
+        delete modifiedPost.comments;
+        delete modifiedPost.likes;
+        return modifiedPost;
+    });
+    res.status(200).json({ msg: modifiedPosts });
 });
 exports.getHomePosts = getHomePosts;
+;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.body);
-        const body = req.body;
-        console.log(body ? "yes" : "no");
+        const { userId, description } = req.body;
         const result = yield postmodel_1.default.create({
-            description: body.description,
-            firstName: body.firstName,
-            lastName: body.lastName,
-            username: body.username,
-            userId: body.userId,
+            description: description,
+            userId,
         });
         if (result) {
             res.status(200).json("Posted sucessfully");

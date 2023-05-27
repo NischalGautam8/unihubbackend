@@ -1,28 +1,37 @@
 import mongoose, { Mongoose } from "mongoose";
-const note = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const note = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    url: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    uploadedBy: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
+    ratingsMap: {
+      type: Map,
+      of: String,
+    },
+    size: {
+      type: Number,
+    },
+    subject: {
+      type: String,
+    },
+    comments: [
+      {
+        type: mongoose.Types.ObjectId,
+        ref: "Comment",
+      },
+    ],
   },
-  url: {
-    type: String,
-    required: true,
-  },
-  uploadedBy: {
-    type: mongoose.Types.ObjectId,
-    ref: "user",
-    required: true,
-  },
-  rating: {
-    type: Number,
-  },
-  size: {
-    type: Number,
-  },
-  comments: {
-    type: mongoose.Types.ObjectId,
-    ref: "comment",
-  },
-});
+  { timestamps: true }
+);
 const notesModel = mongoose.model("Notes", note);
 export default notesModel;

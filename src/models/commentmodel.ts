@@ -7,16 +7,12 @@ const Comment = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "User",
     },
-    username: String,
     commentimage: String,
-
-    firstName: String,
-    lastName: String,
     postid: {
       type: mongoose.Types.ObjectId,
       ref: "Post",
     },
-    replies: [{ type: mongoose.Types.ObjectId, ref: "comment" }],
+    replies: [{ type: mongoose.Types.ObjectId, ref: "Comment" }],
   },
   { timestamps: true }
 );

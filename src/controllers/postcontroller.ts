@@ -1,19 +1,24 @@
 import {
-  express,
   NextFunction,
   Request,
   RequestHandler,
   Response,
 } from "express";
-import mongoose from "mongoose";
-import postinterface from "../interface/postinterface";
-
+import { Document } from "mongoose";
 import PostModel from "../models/postmodel";
+import { postinterface } from '../interface/postinterface';
+interface extendedPostInterfece extends postinterface{
+comments:Array<String>,
+likes:Array<String>,
+}
 const getonepost: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     console.log(id);
-    const result = await PostModel.findOne({ _id: id });
+    const result = await PostModel.findOne({ _id: id }).populate({
+      path: "userId",
+        select: "_id username lastName firstName  ",
+    });
     if (!result) {
       return res.status(404).json("cannot find the post");
     } else {
@@ -26,17 +31,28 @@ const getonepost: RequestHandler = async (req: Request, res: Response) => {
 };
 const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
   const page: number = Number(req.params.page) || 1;
+  const userid:string=req.query.userid as string;
 
-  const posts = PostModel.find();
-  if (!posts) {
-    return res.status(400).json({ err: "unable to retrive posts" });
-  } else {
+  const postsQuery = PostModel.find().populate({
+    path:"userId",
+    select:"_id username lastName firstName"
+  });
+  //TODO : SEND likes and comment count sepertely
+  
     const limit = 20;
     const skip = (page - 1) * limit;
-    const postb = posts.skip(skip);
-    const posta = postb.limit(limit);
-    const toreturn = await posta;
-    res.status(200).json({ msg: toreturn });
+    const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+    const toreturn:extendedPostInterfece[] = await postsQueryPaginated.exec();
+    const modifiedPosts=toreturn.map(post=>{
+      const modifiedPost=post.toObject();
+      modifiedPost.commentsCount=post.comments.length;
+      modifiedPost.likesCount=post.likes.length;
+      modifiedPost.hasLiked=post.likes.includes(userid);
+      delete modifiedPost.comments;
+      delete modifiedPost.likes;
+      return modifiedPost;
+    })
+    res.status(200).json({ msg: modifiedPosts });
   }
 };
 
@@ -47,14 +63,10 @@ const createPost: RequestHandler = async (
 ) => {
   try {
     console.log(req.body);
-    const body: postinterface = req.body;
-    console.log(body ? "yes" : "no");
+    const {userId,description} = req.body;
     const result = await PostModel.create({
-      description: body.description,
-      firstName: body.firstName,
-      lastName: body.lastName,
-      username: body.username,
-      userId: body.userId,
+      description: description,
+      userId,
     });
     if (result) {
       res.status(200).json("Posted sucessfully");
@@ -77,7 +89,7 @@ const unlikepost: RequestHandler = async (
     if (!userid) {
       return res.status(400).json("userid must be provided");
     }
-    const post: postinterface = await PostModel.findOneAndUpdate(
+    const post = await PostModel.findOneAndUpdate(
       { _id: req.params.id, likes: userid },
       {
         $pull: { likes: userid },
@@ -107,7 +119,7 @@ const likepost: RequestHandler = async (
       return res.status(500).json("userid must be sent");
     }
     const { id } = req.params;
-    const post: postinterface = await PostModel.findOne(
+    const post = await PostModel.findOne(
       {
         _id: id,
         likes: userid,

@@ -12,22 +12,28 @@ const note = new mongoose_1.default.Schema({
     url: {
         type: String,
         required: true,
+        unique: true,
     },
     uploadedBy: {
         type: mongoose_1.default.Types.ObjectId,
-        ref: "user",
-        required: true,
+        ref: "User",
     },
-    rating: {
-        type: Number,
+    ratingsMap: {
+        type: Map,
+        of: String,
     },
     size: {
         type: Number,
     },
-    comments: {
-        type: mongoose_1.default.Types.ObjectId,
-        ref: "comment",
+    subject: {
+        type: String,
     },
-});
+    comments: [
+        {
+            type: mongoose_1.default.Types.ObjectId,
+            ref: "Comment",
+        },
+    ],
+}, { timestamps: true });
 const notesModel = mongoose_1.default.model("Notes", note);
 exports.default = notesModel;

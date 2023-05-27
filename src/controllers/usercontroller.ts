@@ -19,31 +19,45 @@ const register: RequestHandler = async (req: Request, res: Response) => {
     if (!req.body.username) {
       return res.status(400).json("username is required");
     }
-    const user: userinterface = await usermodel.create(
-      {
-        username: req.body.username,
-        lastName: req.body.lastName,
-        firstName: req.body.firstName,
-        email: req.body.email,
-        gender: req.body.gender,
-        password: await bcrypt.hash(req.body.password, 10),
-      },
-      { new: true }
-    );
+    if (!req.body.firstName) {
+      return res.status(400).json("firstName is required");
+    }
+    if (!req.body.lastName) {
+      return res.status(400).json("lastName is required");
+    }
+    const usernametaken=await usermodel.findOne({username:req.body.username});
+    if(usernametaken) return res.status(400).json({err:"username is already taken"});
+      const user:userinterface =await  usermodel.create(
+        {
+          username: req.body.username,
+          lastName: req.body.lastName,
+          firstName: req.body.firstName,
+          email: req.body.email,
+          gender: req.body.gender,
+          password: await bcrypt.hash(req.body.password, 10),
+        },
+      );
+
     if (!user) {
       res.status(400).json("unable to create user");
     } else {
-      console.log("user:", user);
+      console.log("user",user);
+      const toreturn ={
+        _id:user._id,
+        username:user.username,
+        lastName:user.lastName,
+        firstName:user.firstName,
+      }
+      // console.log("toreturn",toreturn);
       const acess_token = createAcessToken({ id: user._id });
       const refresh_token = createRefreshToken({ id: user._id });
       const tokeninserted = await refreshTokenModel.create({
         token: refresh_token,
-        user: new mongoose.Types.ObjectId(user._id),
+        user: user._id,
       });
-      console.log(refresh_token, acess_token, tokeninserted);
-      console.log(user);
+    
       return res.status(200).json({
-        user,
+        user:toreturn,
         refresh_token,
         acess_token,
       });
@@ -59,7 +73,7 @@ const login = async (req: Request, res: Response) => {
   if (!result) {
     return res.status(404).json({ err: "no user found" });
   } else {
-    if (!(await bcrypt.compare(password, result.password))) {
+    if (!( bcrypt.compare(password, result.password))) {
       res.status(500).json({ msg: "wrong password" });
     } else {
       const acess_token = createAcessToken({ id: result._id });
@@ -98,7 +112,6 @@ const generatenewacesstoken: RequestHandler = async (
       return res.status(400).json({ err: "invalid refresh token" });
     }
     const acesstoken = createAcessToken({ _id: refTokenOnDB.user });
-    console.log(acesstoken);
     return res.status(200).json({ acesstoken });
   } catch (err) {
     console.log(err);
@@ -121,10 +134,8 @@ const getFollwing = async (req: Request, res: Response) => {
 const uploadProfilePic = async (req: any, res: Response) => {
   try {
     const f = req.file;
-    console.log(f);
     const fileUri = getDataUri(f);
     const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
-    console.log(mycloud.secure_url);
     const update = await usermodel.findByIdAndUpdate(
       { _id: req.body.id },
       {

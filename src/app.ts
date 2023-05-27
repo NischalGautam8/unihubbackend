@@ -35,8 +35,9 @@ const io = new Server(httpserver, {
 });
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
-  socket.on("join_room", (data) => {
+  socket.on("join_room", (data,jwt) => {
     socket.join(data);
+    console.log("jwt",jwt);
     ///TODO:JWT authenticate on room join
     console.log("joined room ", data);
   });

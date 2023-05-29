@@ -6,9 +6,77 @@ dotenv.config();
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import { userinterface } from "../interface/userinterface";
+import { userinterface } from '../interface/userinterface';
 import getDataUri from "../utils/dataUri";
 import cloudinary from "cloudinary";
+
+const getUserInfo:RequestHandler=async (req:Request,res:Response)=>{
+  try {
+    const user=await usermodel.findOne({_id:req.params.userid}).select("firstName lastName username profilepic gender createdAt followers following ");
+    if(!user){
+     return res.status(404).json({err:"user doesnot exist"})
+    }
+    console.log("user",user);
+    const toreturn={
+      firstName:user.firstName,
+      lastName:user.lastName,
+      username:user.username,
+      createdAt:user.createdAt,
+      gender:user.gender,
+      followerCount:user.followers.length,
+      followingCount:user.following.length,
+    }
+    return res.status(200).json({user:toreturn});
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+}
+const getFollowers:RequestHandler=async(req:Request,res:Response)=>{
+  try{
+    const page=(req.query.page) || 1;
+    const skip=(Number(page)-1)*30;
+    const user:userinterface
+    =await usermodel.findOne({_id:req.params.id}).populate("followers", "-password   -email  -createdAt -updatedAt").skip(skip);
+    if(!user){
+      return res.status(404).send("no user found");
+    }else{
+      console.log(user);
+      const toreturn =user.followers.map((follower:userinterface)=>{
+        const obj={
+          _id:follower._id,
+          firstName:follower.firstName,
+          lastName:follower.lastName,
+          doYouFollow:follower.followers.includes(req.query.id),
+        }
+        return obj;
+      })
+      console.log(toreturn);
+      return res.status(200).json({
+        followers:toreturn
+      })
+    }
+  }catch(err){
+    console.log(err);
+  }
+}
+const getFollwing = async (req: Request, res: Response) => {
+  try {
+    const page=(req.query.page) || 1;
+    const skip=(Number(page)-1)*30;
+    const following = await usermodel
+      .findOne({ _id: req.params.id })
+      .populate("following", "-password -email  -createdAt -updatedAt").skip(skip);
+    if (!following) {
+      return res.status(404).json("cannot get following");
+    }
+    return res.status(200).json({ following: following.following });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+};
+
 const register: RequestHandler = async (req: Request, res: Response) => {
   try {
     if (req.body.password.length < 6) {
@@ -117,20 +185,7 @@ const generatenewacesstoken: RequestHandler = async (
     console.log(err);
   }
 };
-const getFollwing = async (req: Request, res: Response) => {
-  try {
-    const following = await usermodel
-      .findOne({ _id: req.params.id })
-      .populate("following", "-password -followers  -createdAt -updatedAt");
-    if (!following) {
-      return res.status(404).json("cannot get following");
-    }
-    return res.status(200).json({ following: following.following });
-  } catch (err) {
-    console.log(err);
-    res.status(400).json(err);
-  }
-};
+
 const uploadProfilePic = async (req: any, res: Response) => {
   try {
     const f = req.file;
@@ -173,11 +228,20 @@ const follow = async (req: Request, res: Response) => {
     console.log(err);
   }
 };
+const unfollow=async(req:Request,res:Response)=>{
+  try{
+    const user=await usermodel.findOne({_id:req.params.id});
+    if(!user) return res.status(404).json({err:"Not found"});
+    
+  }
+}
 export {
   register,
   login,
   generatenewacesstoken,
   uploadProfilePic,
   getFollwing,
+  getFollowers,
   follow,
+  getUserInfo
 };

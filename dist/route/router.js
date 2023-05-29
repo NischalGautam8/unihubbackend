@@ -14,11 +14,9 @@ const usercontroller_1 = require("../controllers/usercontroller");
 const multer_1 = require("../controllers/multer");
 routing.route("/posts").post(verifyToken_1.verifyToken, postcontroller_1.createPost).get(postcontroller_1.getHomePosts);
 routing.route("/posts/:id").get(postcontroller_1.getonepost);
+routing.route("/posts/user/:id").get(postcontroller_1.getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken_1.verifyToken, postcontroller_1.likepost);
 routing.route("/posts/unlike/:id").post(verifyToken_1.verifyToken, postcontroller_1.unlikepost);
-routing.route("/follow/:id").post(usercontroller_1.follow);
-routing.route("/uploadprofilepic").post(multer_1.singleUpload, usercontroller_1.uploadProfilePic);
-//get following of a user
 //NOTES////
 routing.route("/notes").post(multer_1.singleUpload, notescontroller_1.uploadNote).get(notescontroller_1.getNotes);
 routing.route("/notes/view/:id").get(notescontroller_1.getSingleNote);
@@ -42,7 +40,11 @@ routing.route("/reply/:id").get(commentcontrller_1.getReply);
 routing.route("/generate").post(usercontroller_1.generatenewacesstoken);
 routing.route("/register").post(usercontroller_1.register);
 routing.route("/login").post(usercontroller_1.login);
-// routing.get("/protected", (req, res) => {
-//   res.send("hello" + req.user);
-// });
+///USER PROFILE
+routing.route('/user/:userid').get(usercontroller_1.getUserInfo);
+routing.route("/follow/:id").post(usercontroller_1.follow);
+routing.route("/unfollow/:id").post();
+routing.route("/uploadprofilepic").post(multer_1.singleUpload, usercontroller_1.uploadProfilePic);
+routing.route("/followers/:id").get(usercontroller_1.getFollowers);
+routing.route("/follwing/:id").get(usercontroller_1.getFollwing);
 exports.default = routing;

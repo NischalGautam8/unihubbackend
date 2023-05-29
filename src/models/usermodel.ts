@@ -25,7 +25,7 @@ const User = new mongoose.Schema(
       type: String,
       default: "Male",
     },
-    followers: [{ type: mongoose.Types.ObjectId, ref: "User" }],
+    followers: [{ type: mongoose.Types.ObjectId, ref: "User" }],//make it set
     following: [{ type: mongoose.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }

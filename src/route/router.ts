@@ -14,6 +14,7 @@ import {
   unlikepost,
   getHomePosts,
   getonepost,
+  getUserPosts,
 } from "../controllers/postcontroller";
 import {
   createConversation,
@@ -36,17 +37,18 @@ import {
   getFollwing,
   follow,
   uploadProfilePic,
+  getUserInfo,
+  getFollowers
 } from "../controllers/usercontroller";
 import { singleUpload } from "../controllers/multer";
 import  verifyOwner  from '../auth/verifyOwner';
 routing.route("/posts").post(verifyToken,createPost).get(getHomePosts);
 routing.route("/posts/:id").get(getonepost);
+routing.route("/posts/user/:id").get(getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken,likepost);
 routing.route("/posts/unlike/:id").post(verifyToken,unlikepost);
 
-routing.route("/follow/:id").post(follow);
-routing.route("/uploadprofilepic").post(singleUpload, uploadProfilePic);
-//get following of a user
+
 //NOTES////
 routing.route("/notes").post(singleUpload, uploadNote).get(getNotes);
 routing.route("/notes/view/:id").get(getSingleNote);
@@ -72,7 +74,11 @@ routing.route("/reply/:id").get(getReply);
 routing.route("/generate").post(generatenewacesstoken);
 routing.route("/register").post(register);
 routing.route("/login").post(login);
-// routing.get("/protected", (req, res) => {
-//   res.send("hello" + req.user);
-// });
+///USER PROFILE
+routing.route('/user/:userid').get(getUserInfo);
+routing.route("/follow/:id").post(follow);
+routing.route("/unfollow/:id").post();
+routing.route("/uploadprofilepic").post(singleUpload, uploadProfilePic);
+routing.route("/followers/:id").get(getFollowers);
+routing.route("/follwing/:id").get(getFollwing);
 export default routing;

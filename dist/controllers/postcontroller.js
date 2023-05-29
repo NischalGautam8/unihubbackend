@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
+exports.getUserPosts = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -40,14 +40,14 @@ const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const userid = req.query.userid;
     const postsQuery = postmodel_1.default.find().populate({
         path: "userId",
-        select: "_id username lastName firstName"
+        select: "_id username lastName firstName",
     });
     //TODO : SEND likes and comment count sepertely
     const limit = 20;
     const skip = (page - 1) * limit;
     const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
     const toreturn = yield postsQueryPaginated.exec();
-    const modifiedPosts = toreturn.map(post => {
+    const modifiedPosts = toreturn.map((post) => {
         const modifiedPost = post.toObject();
         modifiedPost.commentsCount = post.comments.length;
         modifiedPost.likesCount = post.likes.length;
@@ -59,7 +59,6 @@ const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     res.status(200).json({ msg: modifiedPosts });
 });
 exports.getHomePosts = getHomePosts;
-;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.body);
@@ -137,3 +136,32 @@ const likepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.likepost = likepost;
+const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const page = Number(req.params.page) || 1;
+        const userId = req.params.id;
+        const postsQuery = postmodel_1.default.find({ userId: userId }).populate({
+            path: "userId",
+            select: "_id username lastName firstName",
+        });
+        //TODO : SEND likes and comment count sepertely
+        const limit = 20;
+        const skip = (page - 1) * limit;
+        const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+        const toreturn = yield postsQueryPaginated.exec();
+        const modifiedPosts = toreturn.map((post) => {
+            const modifiedPost = post.toObject();
+            modifiedPost.commentsCount = post.comments.length;
+            modifiedPost.likesCount = post.likes.length;
+            modifiedPost.hasLiked = post.likes.includes(userId);
+            delete modifiedPost.comments;
+            delete modifiedPost.likes;
+            return modifiedPost;
+        });
+        res.status(200).json({ msg: modifiedPosts });
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.getUserPosts = getUserPosts;

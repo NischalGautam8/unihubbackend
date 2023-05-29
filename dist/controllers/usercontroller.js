@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.follow = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
+exports.getUserInfo = exports.follow = exports.getFollowers = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
 const usermodel_1 = __importDefault(require("../models/usermodel"));
 const refreshtoken_1 = __importDefault(require("../models/refreshtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -21,6 +21,78 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield usermodel_1.default.findOne({ _id: req.params.userid }).select("firstName lastName username profilepic gender createdAt followers following ");
+        if (!user) {
+            return res.status(404).json({ err: "user doesnot exist" });
+        }
+        console.log("user", user);
+        const toreturn = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            createdAt: user.createdAt,
+            gender: user.gender,
+            followerCount: user.followers.length,
+            followingCount: user.following.length,
+        };
+        return res.status(200).json({ user: toreturn });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+});
+exports.getUserInfo = getUserInfo;
+const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const page = (req.query.page) || 1;
+        const skip = (Number(page) - 1) * 30;
+        const user = yield usermodel_1.default.findOne({ _id: req.params.id }).populate("followers", "-password   -email  -createdAt -updatedAt").skip(skip);
+        if (!user) {
+            return res.status(404).send("no user found");
+        }
+        else {
+            console.log(user);
+            const toreturn = user.followers.map((follower) => {
+                const obj = {
+                    _id: follower._id,
+                    firstName: follower.firstName,
+                    lastName: follower.lastName,
+                    doYouFollow: follower.followers.includes(req.query.id),
+                };
+                return obj;
+            });
+            console.log(toreturn);
+            return res.status(200).json({
+                followers: toreturn
+            });
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.getFollowers = getFollowers;
+const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const page = (req.query.page) || 1;
+        const skip = (Number(page) - 1) * 30;
+        const following = yield usermodel_1.default
+            .findOne({ _id: req.params.id })
+            .populate("following", "-password -email  -createdAt -updatedAt").skip(skip);
+        if (!following) {
+            return res.status(404).json("cannot get following");
+        }
+        return res.status(200).json({ following: following.following });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+});
+exports.getFollwing = getFollwing;
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (req.body.password.length < 6) {
@@ -131,22 +203,6 @@ const generatenewacesstoken = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.generatenewacesstoken = generatenewacesstoken;
-const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const following = yield usermodel_1.default
-            .findOne({ _id: req.params.id })
-            .populate("following", "-password -followers  -createdAt -updatedAt");
-        if (!following) {
-            return res.status(404).json("cannot get following");
-        }
-        return res.status(200).json({ following: following.following });
-    }
-    catch (err) {
-        console.log(err);
-        res.status(400).json(err);
-    }
-});
-exports.getFollwing = getFollwing;
 const uploadProfilePic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const f = req.file;
@@ -184,3 +240,12 @@ const follow = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.follow = follow;
+const unfollow = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield usermodel_1.default.findOne({ _id: req.params.id });
+        if (!user)
+            return res.status(404).json({ err: "Not found" });
+    }
+    finally {
+    }
+});

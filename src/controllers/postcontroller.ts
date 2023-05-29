@@ -1,15 +1,10 @@
-import {
-  NextFunction,
-  Request,
-  RequestHandler,
-  Response,
-} from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { Document } from "mongoose";
 import PostModel from "../models/postmodel";
-import { postinterface } from '../interface/postinterface';
-interface extendedPostInterfece extends postinterface{
-comments:Array<String>,
-likes:Array<String>,
+import { postinterface } from "../interface/postinterface";
+interface extendedPostInterfece extends postinterface {
+  comments: Array<String>;
+  likes: Array<String>;
 }
 const getonepost: RequestHandler = async (req: Request, res: Response) => {
   try {
@@ -17,7 +12,7 @@ const getonepost: RequestHandler = async (req: Request, res: Response) => {
     console.log(id);
     const result = await PostModel.findOne({ _id: id }).populate({
       path: "userId",
-        select: "_id username lastName firstName  ",
+      select: "_id username lastName firstName  ",
     });
     if (!result) {
       return res.status(404).json("cannot find the post");
@@ -31,29 +26,28 @@ const getonepost: RequestHandler = async (req: Request, res: Response) => {
 };
 const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
   const page: number = Number(req.params.page) || 1;
-  const userid:string=req.query.userid as string;
+  const userid: string = req.query.userid as string;
 
   const postsQuery = PostModel.find().populate({
-    path:"userId",
-    select:"_id username lastName firstName"
+    path: "userId",
+    select: "_id username lastName firstName",
   });
   //TODO : SEND likes and comment count sepertely
-  
-    const limit = 20;
-    const skip = (page - 1) * limit;
-    const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
-    const toreturn:extendedPostInterfece[] = await postsQueryPaginated.exec();
-    const modifiedPosts=toreturn.map(post=>{
-      const modifiedPost=post.toObject();
-      modifiedPost.commentsCount=post.comments.length;
-      modifiedPost.likesCount=post.likes.length;
-      modifiedPost.hasLiked=post.likes.includes(userid);
-      delete modifiedPost.comments;
-      delete modifiedPost.likes;
-      return modifiedPost;
-    })
-    res.status(200).json({ msg: modifiedPosts });
-  }
+
+  const limit = 20;
+  const skip = (page - 1) * limit;
+  const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+  const toreturn: extendedPostInterfece[] = await postsQueryPaginated.exec();
+  const modifiedPosts = toreturn.map((post) => {
+    const modifiedPost = post.toObject();
+    modifiedPost.commentsCount = post.comments.length;
+    modifiedPost.likesCount = post.likes.length;
+    modifiedPost.hasLiked = post.likes.includes(userid);
+    delete modifiedPost.comments;
+    delete modifiedPost.likes;
+    return modifiedPost;
+  });
+  res.status(200).json({ msg: modifiedPosts });
 };
 
 const createPost: RequestHandler = async (
@@ -63,7 +57,7 @@ const createPost: RequestHandler = async (
 ) => {
   try {
     console.log(req.body);
-    const {userId,description} = req.body;
+    const { userId, description } = req.body;
     const result = await PostModel.create({
       description: description,
       userId,
@@ -146,5 +140,40 @@ const likepost: RequestHandler = async (
     console.log(err);
   }
 };
+const getUserPosts: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const page: number = Number(req.params.page) || 1;
+    const userId: string = req.params.id as string;
 
-export { createPost, likepost, getHomePosts, getonepost, unlikepost };
+    const postsQuery = PostModel.find({ userId: userId }).populate({
+      path: "userId",
+      select: "_id username lastName firstName",
+    });
+    //TODO : SEND likes and comment count sepertely
+
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+    const toreturn: extendedPostInterfece[] = await postsQueryPaginated.exec();
+    const modifiedPosts = toreturn.map((post) => {
+      const modifiedPost = post.toObject();
+      modifiedPost.commentsCount = post.comments.length;
+      modifiedPost.likesCount = post.likes.length;
+      modifiedPost.hasLiked = post.likes.includes(userId);
+      delete modifiedPost.comments;
+      delete modifiedPost.likes;
+      return modifiedPost;
+    });
+    res.status(200).json({ msg: modifiedPosts });
+  } catch (err) {
+    console.log(err)
+  }
+};
+export {
+  createPost,
+  likepost,
+  getHomePosts,
+  getonepost,
+  unlikepost,
+  getUserPosts,
+};

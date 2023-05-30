@@ -16,7 +16,7 @@ const getUserInfo:RequestHandler=async (req:Request,res:Response)=>{
     if(!user){
      return res.status(404).json({err:"user doesnot exist"})
     }
-    console.log("user",user);
+    console.log("requesiting",req.query.myid);
     const toreturn={
       firstName:user.firstName,
       lastName:user.lastName,
@@ -25,6 +25,7 @@ const getUserInfo:RequestHandler=async (req:Request,res:Response)=>{
       gender:user.gender,
       followerCount:user.followers.length,
       followingCount:user.following.length,
+      doYouFollow:user.followers.includes(req.query.myid as string )
     }
     return res.status(200).json({user:toreturn});
   } catch (err) {
@@ -64,13 +65,22 @@ const getFollwing = async (req: Request, res: Response) => {
   try {
     const page=(req.query.page) || 1;
     const skip=(Number(page)-1)*30;
-    const following = await usermodel
+    const user:userinterface = await usermodel
       .findOne({ _id: req.params.id })
       .populate("following", "-password -email  -createdAt -updatedAt").skip(skip);
-    if (!following) {
+    if (!user) {
       return res.status(404).json("cannot get following");
     }
-    return res.status(200).json({ following: following.following });
+    const toreturn =user.following.map((follower:userinterface)=>{
+      const obj={
+        _id:follower._id,
+        firstName:follower.firstName,
+        lastName:follower.lastName,
+        doYouFollow:follower.followers.includes(req.query.id),
+      }
+      return obj;
+    })
+    return res.status(200).json({ following: toreturn });
   } catch (err) {
     console.log(err);
     res.status(400).json(err);
@@ -206,6 +216,9 @@ const uploadProfilePic = async (req: any, res: Response) => {
 const follow = async (req: Request, res: Response) => {
   try {
     //to follow id on params
+    if(req.params.id==req.body.id) return res.status(400).json({err:"you cannot folllow yourself"})
+    const alreadyFollowed=await usermodel.findOne({_id:req.params.id});
+    if(alreadyFollowed && alreadyFollowed.followers.includes(req.body.id)) return res.status(400).json({err:"already following"});
     const follow = await usermodel.findOneAndUpdate(
       { _id: req.params.id },
       {
@@ -232,7 +245,19 @@ const unfollow=async(req:Request,res:Response)=>{
   try{
     const user=await usermodel.findOne({_id:req.params.id});
     if(!user) return res.status(404).json({err:"Not found"});
+    const res1=await usermodel.findOneAndUpdate({_id:req.params.id
+    },{
+      $pull:{followers:req.body.id}
+    })
+    if(!res1) return res.status(404).json({err:"could not unfollow"});
+    const res2=await usermodel.findOneAndUpdate({_id:req.body.id},{
+    },{
+      $pull:{following:req.params.id}
+    }
+    )
     
+  }catch(err){
+    console.log(err);
   }
 }
 export {
@@ -243,5 +268,6 @@ export {
   getFollwing,
   getFollowers,
   follow,
+  unfollow,
   getUserInfo
 };

@@ -2,9 +2,12 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { Document } from "mongoose";
 import PostModel from "../models/postmodel";
 import { postinterface } from "../interface/postinterface";
+import usermodel from "../models/usermodel";
+import { userinterface } from "../interface/userinterface";
 interface extendedPostInterfece extends postinterface {
   comments: Array<String>;
   likes: Array<String>;
+  saved: Array<String>;
 }
 const getonepost: RequestHandler = async (req: Request, res: Response) => {
   try {
@@ -25,7 +28,7 @@ const getonepost: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
-  const page: number = Number(req.params.page) || 1;
+  const page: number = Number(req.query.page) || 1;
   const userid: string = req.query.userid as string;
 
   const postsQuery = PostModel.find().populate({
@@ -39,6 +42,60 @@ const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
   const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
   const toreturn: extendedPostInterfece[] = await postsQueryPaginated.exec();
   const modifiedPosts = toreturn.map((post) => {
+    const modifiedPost = post.toObject();
+    modifiedPost.commentsCount = post.comments.length;
+    modifiedPost.likesCount = post.likes.length;
+    modifiedPost.hasLiked = post.likes.includes(userid);
+    delete modifiedPost.comments;
+    delete modifiedPost.likes;
+    return modifiedPost;
+  });
+  res.status(200).json({ msg: modifiedPosts });
+};
+const savePost: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const insert = await usermodel.findOneAndUpdate(
+      { _id: req.body.id },
+      {
+        $push: { saved: req.params.id },
+      }
+    );
+    if (!insert) {
+      return res.status(400).json({ err: "unable to save post" });
+    }
+    return res.status(200).send("saved post");
+  } catch (err) {
+    console.log(err);
+  }
+};
+const unsavePost: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const remove = await usermodel.findOneAndUpdate(
+      { _id: req.body.id },
+      {
+        $pull: { saved: req.params.id },
+      }
+    );
+    if (!remove) {
+      return res.status(400).json({ err: "unable to unsave post" });
+    }
+    return res.status(200).send("saved post");
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
+};
+const getSavedPosts: RequestHandler = async (req: Request, res: Response) => {
+  const page: number = Number(req.query.page) || 1;
+  const userid: string = req.params.id as string;
+  const limit = 20;
+  const skip = (page - 1) * limit;
+  const savedposts = usermodel
+    .findOne({ _id: req.params.id })
+    .populate({ path: "saved" })
+    .skip(skip);
+  const toreturn: extendedPostInterfece[] = await savedposts.exec();
+  const modifiedPosts = toreturn.saved.map((post) => {
     const modifiedPost = post.toObject();
     modifiedPost.commentsCount = post.comments.length;
     modifiedPost.likesCount = post.likes.length;
@@ -166,7 +223,7 @@ const getUserPosts: RequestHandler = async (req: Request, res: Response) => {
     });
     res.status(200).json({ msg: modifiedPosts });
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
 };
 export {
@@ -175,5 +232,8 @@ export {
   getHomePosts,
   getonepost,
   unlikepost,
+  savePost,
+  unsavePost,
+  getSavedPosts,
   getUserPosts,
 };

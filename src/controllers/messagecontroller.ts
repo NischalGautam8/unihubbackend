@@ -86,7 +86,11 @@ const getConversationAndMessages = async (req: Request, res: Response) => {
     const skip = 25 * (page - 1);
     const conversation = await conversationmodel
       .findOne({ _id: conversationid })
-      .populate({ path: "messages", options: { limit: 25, skip: skip } })
+      .populate({
+        path: "messages",
+        select: "content sender receiver createdAt ",
+        options: { limit: 25, skip: skip },
+      })
       .populate(
         "users",
         "-password -followers -following -createdAt -updatedAt"

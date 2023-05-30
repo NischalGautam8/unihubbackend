@@ -25,8 +25,9 @@ const User = new mongoose.Schema(
       type: String,
       default: "Male",
     },
-    followers: [{ type: mongoose.Types.ObjectId, ref: "User" }],//make it set
+    followers: [{ type: mongoose.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Types.ObjectId, ref: "User" }],
+    saved: [{ type: mongoose.Types.ObjectId, ref: "Post" }],
   },
   { timestamps: true }
 );

@@ -88,7 +88,11 @@ const getConversationAndMessages = (req, res) => __awaiter(void 0, void 0, void 
         const skip = 25 * (page - 1);
         const conversation = yield conversationmodel_1.default
             .findOne({ _id: conversationid })
-            .populate({ path: "messages", options: { limit: 25, skip: skip } })
+            .populate({
+            path: "messages",
+            select: "content sender receiver createdAt ",
+            options: { limit: 25, skip: skip },
+        })
             .populate("users", "-password -followers -following -createdAt -updatedAt");
         if (!conversation) {
             return res.status(400).json("couldnot find convo");

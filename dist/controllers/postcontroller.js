@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserPosts = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
+exports.getUserPosts = exports.getSavedPosts = exports.unsavePost = exports.savePost = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
+const usermodel_1 = __importDefault(require("../models/usermodel"));
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
@@ -36,7 +37,7 @@ const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.getonepost = getonepost;
 const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const page = Number(req.params.page) || 1;
+    const page = Number(req.query.page) || 1;
     const userid = req.query.userid;
     const postsQuery = postmodel_1.default.find().populate({
         path: "userId",
@@ -59,6 +60,59 @@ const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     res.status(200).json({ msg: modifiedPosts });
 });
 exports.getHomePosts = getHomePosts;
+const savePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const insert = yield usermodel_1.default.findOneAndUpdate({ _id: req.body.id }, {
+            $push: { saved: req.params.id },
+        });
+        if (!insert) {
+            return res.status(400).json({ err: "unable to save post" });
+        }
+        return res.status(200).send("saved post");
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.savePost = savePost;
+const unsavePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const remove = yield usermodel_1.default.findOneAndUpdate({ _id: req.body.id }, {
+            $pull: { saved: req.params.id },
+        });
+        if (!remove) {
+            return res.status(400).json({ err: "unable to unsave post" });
+        }
+        return res.status(200).send("saved post");
+    }
+    catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+});
+exports.unsavePost = unsavePost;
+const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const page = Number(req.query.page) || 1;
+    const userid = req.params.id;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const savedposts = usermodel_1.default
+        .findOne({ _id: req.params.id })
+        .populate({ path: "saved" })
+        .skip(skip);
+    const toreturn = yield savedposts.exec();
+    const modifiedPosts = toreturn.saved.map((post) => {
+        const modifiedPost = post.toObject();
+        modifiedPost.commentsCount = post.comments.length;
+        modifiedPost.likesCount = post.likes.length;
+        modifiedPost.hasLiked = post.likes.includes(userid);
+        delete modifiedPost.comments;
+        delete modifiedPost.likes;
+        return modifiedPost;
+    });
+    res.status(200).json({ msg: modifiedPosts });
+});
+exports.getSavedPosts = getSavedPosts;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(req.body);

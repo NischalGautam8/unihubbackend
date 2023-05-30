@@ -9,6 +9,8 @@ const meesagemodel = new mongoose_1.default.Schema({
     content: String,
     sender: { type: mongoose_1.default.Types.ObjectId, ref: "user" },
     receiver: { type: mongoose_1.default.Types.ObjectId, ref: "user" },
+}, {
+    timestamps: true,
 });
 const messageModel = mongoose_1.default.model("messages", meesagemodel);
 exports.default = messageModel;

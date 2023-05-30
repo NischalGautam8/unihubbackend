@@ -31,6 +31,7 @@ const User = new mongoose_1.default.Schema({
     },
     followers: [{ type: mongoose_1.default.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose_1.default.Types.ObjectId, ref: "User" }],
+    saved: [{ type: mongoose_1.default.Types.ObjectId, ref: "Post" }],
 }, { timestamps: true });
 const usermodel = mongoose_1.default.model("User", User);
 exports.default = usermodel;

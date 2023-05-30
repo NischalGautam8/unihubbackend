@@ -15,6 +15,9 @@ import {
   getHomePosts,
   getonepost,
   getUserPosts,
+  savePost,
+  unsavePost,
+  getSavedPosts,
 } from "../controllers/postcontroller";
 import {
   createConversation,
@@ -36,18 +39,21 @@ import {
   generatenewacesstoken,
   getFollwing,
   follow,
+  unfollow,
   uploadProfilePic,
   getUserInfo,
-  getFollowers
+  getFollowers,
 } from "../controllers/usercontroller";
 import { singleUpload } from "../controllers/multer";
-import  verifyOwner  from '../auth/verifyOwner';
-routing.route("/posts").post(verifyToken,createPost).get(getHomePosts);
+import verifyOwner from "../auth/verifyOwner";
+routing.route("/posts").post(verifyToken, createPost).get(getHomePosts);
 routing.route("/posts/:id").get(getonepost);
 routing.route("/posts/user/:id").get(getUserPosts);
-routing.route("/posts/like/:id").post(verifyToken,likepost);
-routing.route("/posts/unlike/:id").post(verifyToken,unlikepost);
-
+routing.route("/posts/like/:id").post(verifyToken, likepost);
+routing.route("/posts/unlike/:id").post(verifyToken, unlikepost);
+routing.route("/posts/save/:id").post(savePost);
+routing.route("/posts/unsave/:id").post(unsavePost);
+routing.route("/posts/saved/:id").get(getSavedPosts);
 
 //NOTES////
 routing.route("/notes").post(singleUpload, uploadNote).get(getNotes);
@@ -75,9 +81,9 @@ routing.route("/generate").post(generatenewacesstoken);
 routing.route("/register").post(register);
 routing.route("/login").post(login);
 ///USER PROFILE
-routing.route('/user/:userid').get(getUserInfo);
+routing.route("/user/:userid").get(getUserInfo);
 routing.route("/follow/:id").post(follow);
-routing.route("/unfollow/:id").post();
+routing.route("/unfollow/:id").post(unfollow);
 routing.route("/uploadprofilepic").post(singleUpload, uploadProfilePic);
 routing.route("/followers/:id").get(getFollowers);
 routing.route("/follwing/:id").get(getFollwing);

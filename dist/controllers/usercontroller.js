@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserInfo = exports.follow = exports.getFollowers = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
+exports.getUserInfo = exports.unfollow = exports.follow = exports.getFollowers = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
 const usermodel_1 = __importDefault(require("../models/usermodel"));
 const refreshtoken_1 = __importDefault(require("../models/refreshtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -27,7 +27,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!user) {
             return res.status(404).json({ err: "user doesnot exist" });
         }
-        console.log("user", user);
+        console.log("requesiting", req.query.myid);
         const toreturn = {
             firstName: user.firstName,
             lastName: user.lastName,
@@ -36,6 +36,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             gender: user.gender,
             followerCount: user.followers.length,
             followingCount: user.following.length,
+            doYouFollow: user.followers.includes(req.query.myid)
         };
         return res.status(200).json({ user: toreturn });
     }
@@ -79,13 +80,22 @@ const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const page = (req.query.page) || 1;
         const skip = (Number(page) - 1) * 30;
-        const following = yield usermodel_1.default
+        const user = yield usermodel_1.default
             .findOne({ _id: req.params.id })
             .populate("following", "-password -email  -createdAt -updatedAt").skip(skip);
-        if (!following) {
+        if (!user) {
             return res.status(404).json("cannot get following");
         }
-        return res.status(200).json({ following: following.following });
+        const toreturn = user.following.map((follower) => {
+            const obj = {
+                _id: follower._id,
+                firstName: follower.firstName,
+                lastName: follower.lastName,
+                doYouFollow: follower.followers.includes(req.query.id),
+            };
+            return obj;
+        });
+        return res.status(200).json({ following: toreturn });
     }
     catch (err) {
         console.log(err);
@@ -222,6 +232,11 @@ exports.uploadProfilePic = uploadProfilePic;
 const follow = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         //to follow id on params
+        if (req.params.id == req.body.id)
+            return res.status(400).json({ err: "you cannot folllow yourself" });
+        const alreadyFollowed = yield usermodel_1.default.findOne({ _id: req.params.id });
+        if (alreadyFollowed && alreadyFollowed.followers.includes(req.body.id))
+            return res.status(400).json({ err: "already following" });
         const follow = yield usermodel_1.default.findOneAndUpdate({ _id: req.params.id }, {
             $push: { followers: req.body.id }, //body ma userid
         });
@@ -245,7 +260,18 @@ const unfollow = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const user = yield usermodel_1.default.findOne({ _id: req.params.id });
         if (!user)
             return res.status(404).json({ err: "Not found" });
+        const res1 = yield usermodel_1.default.findOneAndUpdate({ _id: req.params.id
+        }, {
+            $pull: { followers: req.body.id }
+        });
+        if (!res1)
+            return res.status(404).json({ err: "could not unfollow" });
+        const res2 = yield usermodel_1.default.findOneAndUpdate({ _id: req.body.id }, {}, {
+            $pull: { following: req.params.id }
+        });
     }
-    finally {
+    catch (err) {
+        console.log(err);
     }
 });
+exports.unfollow = unfollow;

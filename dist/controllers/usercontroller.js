@@ -23,7 +23,9 @@ const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield usermodel_1.default.findOne({ _id: req.params.userid }).select("firstName lastName username profilepic gender createdAt followers following ");
+        const user = yield usermodel_1.default
+            .findOne({ _id: req.params.userid })
+            .select("firstName lastName username profilepic gender createdAt followers following ");
         if (!user) {
             return res.status(404).json({ err: "user doesnot exist" });
         }
@@ -36,7 +38,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             gender: user.gender,
             followerCount: user.followers.length,
             followingCount: user.following.length,
-            doYouFollow: user.followers.includes(req.query.myid)
+            doYouFollow: user.followers.includes(req.query.myid),
         };
         return res.status(200).json({ user: toreturn });
     }
@@ -48,9 +50,12 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getUserInfo = getUserInfo;
 const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const page = (req.query.page) || 1;
+        const page = req.query.page || 1;
         const skip = (Number(page) - 1) * 30;
-        const user = yield usermodel_1.default.findOne({ _id: req.params.id }).populate("followers", "-password   -email  -createdAt -updatedAt").skip(skip);
+        const user = yield usermodel_1.default
+            .findOne({ _id: req.params.id })
+            .populate("followers", "-password   -email  -createdAt -updatedAt")
+            .skip(skip);
         if (!user) {
             return res.status(404).send("no user found");
         }
@@ -67,7 +72,7 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             });
             console.log(toreturn);
             return res.status(200).json({
-                followers: toreturn
+                followers: toreturn,
             });
         }
     }
@@ -78,11 +83,12 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getFollowers = getFollowers;
 const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const page = (req.query.page) || 1;
+        const page = req.query.page || 1;
         const skip = (Number(page) - 1) * 30;
         const user = yield usermodel_1.default
             .findOne({ _id: req.params.id })
-            .populate("following", "-password -email  -createdAt -updatedAt").skip(skip);
+            .populate("following", "-password -email  -createdAt -updatedAt")
+            .skip(skip);
         if (!user) {
             return res.status(404).json("cannot get following");
         }
@@ -92,6 +98,7 @@ const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 firstName: follower.firstName,
                 lastName: follower.lastName,
                 doYouFollow: follower.followers.includes(req.query.id),
+                isFriend: follower.following.includes(req.params.id),
             };
             return obj;
         });
@@ -119,7 +126,9 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!req.body.lastName) {
             return res.status(400).json("lastName is required");
         }
-        const usernametaken = yield usermodel_1.default.findOne({ username: req.body.username });
+        const usernametaken = yield usermodel_1.default.findOne({
+            username: req.body.username,
+        });
         if (usernametaken)
             return res.status(400).json({ err: "username is already taken" });
         const user = yield usermodel_1.default.create({
@@ -168,7 +177,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return res.status(404).json({ err: "no user found" });
     }
     else {
-        if (!(bcrypt_1.default.compare(password, result.password))) {
+        if (!bcrypt_1.default.compare(password, result.password)) {
             res.status(500).json({ msg: "wrong password" });
         }
         else {
@@ -190,7 +199,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.login = login;
 const createAcessToken = (payload) => {
     return jsonwebtoken_1.default.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "30s",
+        expiresIn: "30d",
     });
 };
 const createRefreshToken = (payload) => {
@@ -260,14 +269,13 @@ const unfollow = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const user = yield usermodel_1.default.findOne({ _id: req.params.id });
         if (!user)
             return res.status(404).json({ err: "Not found" });
-        const res1 = yield usermodel_1.default.findOneAndUpdate({ _id: req.params.id
-        }, {
-            $pull: { followers: req.body.id }
+        const res1 = yield usermodel_1.default.findOneAndUpdate({ _id: req.params.id }, {
+            $pull: { followers: req.body.id },
         });
         if (!res1)
             return res.status(404).json({ err: "could not unfollow" });
         const res2 = yield usermodel_1.default.findOneAndUpdate({ _id: req.body.id }, {}, {
-            $pull: { following: req.params.id }
+            $pull: { following: req.params.id },
         });
     }
     catch (err) {

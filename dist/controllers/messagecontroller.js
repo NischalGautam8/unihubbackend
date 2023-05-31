@@ -82,6 +82,7 @@ const createMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createMessage = createMessage;
 const getConversationAndMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //TODO protect this route
     try {
         const conversationid = req.params.id;
         const page = Number(req.query.page) || 1;
@@ -91,9 +92,9 @@ const getConversationAndMessages = (req, res) => __awaiter(void 0, void 0, void 
             .populate({
             path: "messages",
             select: "content sender receiver createdAt ",
-            options: { limit: 25, skip: skip },
+            options: { limit: 25, sort: "createdAt", skip: skip },
         })
-            .populate("users", "-password -followers -following -createdAt -updatedAt");
+            .populate("users", "-password -followers -following -createdAt -updatedAt -saved -email");
         if (!conversation) {
             return res.status(400).json("couldnot find convo");
         }

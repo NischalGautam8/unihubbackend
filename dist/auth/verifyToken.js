@@ -7,9 +7,15 @@ exports.verifyToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const verifyToken = (req, res, next) => {
     try {
-        const { jwt } = req.body;
+        let { jwt } = req.body;
         if (!jwt) {
-            return res.status(400).send("no jwt provided");
+            const authheaders = req.headers.authorization;
+            if (authheaders) {
+                jwt = authheaders.split(" ")[1];
+            }
+            else {
+                return res.status(400).send("no jwt provided");
+            }
         }
         jsonwebtoken_1.default.verify(jwt, "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC", (err, user) => {
             if (err) {

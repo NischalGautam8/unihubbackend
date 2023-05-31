@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserPosts = exports.getSavedPosts = exports.unsavePost = exports.savePost = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const usermodel_1 = __importDefault(require("../models/usermodel"));
+const dataUri_1 = __importDefault(require("../utils/dataUri"));
+const cloudinary_1 = __importDefault(require("cloudinary"));
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
@@ -115,12 +117,26 @@ const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.getSavedPosts = getSavedPosts;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.body);
         const { userId, description } = req.body;
-        const result = yield postmodel_1.default.create({
-            description: description,
-            userId,
-        });
+        const file = req.file;
+        let result;
+        if (file) {
+            const uri = (0, dataUri_1.default)(file);
+            if (uri.content) {
+                var uploaded = yield cloudinary_1.default.v2.uploader.upload(uri.content);
+                result = yield postmodel_1.default.create({
+                    description: description,
+                    userId,
+                    image: uploaded.secure_url,
+                });
+            }
+        }
+        else {
+            result = yield postmodel_1.default.create({
+                description: description,
+                userId,
+            });
+        }
         if (result) {
             res.status(200).json("Posted sucessfully");
         }

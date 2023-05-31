@@ -80,6 +80,7 @@ const createMessage = async (req: Request, res: Response) => {
   }
 };
 const getConversationAndMessages = async (req: Request, res: Response) => {
+  //TODO protect this route
   try {
     const conversationid = req.params.id;
     const page: number = Number(req.query.page) || 1;
@@ -89,11 +90,12 @@ const getConversationAndMessages = async (req: Request, res: Response) => {
       .populate({
         path: "messages",
         select: "content sender receiver createdAt ",
-        options: { limit: 25, skip: skip },
+        options: { limit: 25, sort: "createdAt", skip: skip },
       })
+
       .populate(
         "users",
-        "-password -followers -following -createdAt -updatedAt"
+        "-password -followers -following -createdAt -updatedAt -saved -email"
       );
     if (!conversation) {
       return res.status(400).json("couldnot find convo");

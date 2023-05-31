@@ -5,9 +5,12 @@ const Post = new mongoose.Schema(
       type: String,
       required: [true, "description is must"],
     },
+    image: {
+      type: String,
+    },
     userId: {
       type: mongoose.Types.ObjectId,
-      ref:"User",
+      ref: "User",
       required: [true, "userid is required"],
     },
     likes: [{ type: mongoose.Types.ObjectId, ref: "User" }],

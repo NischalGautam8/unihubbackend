@@ -1,9 +1,9 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { Document } from "mongoose";
 import PostModel from "../models/postmodel";
 import { postinterface } from "../interface/postinterface";
 import usermodel from "../models/usermodel";
-import { userinterface } from "../interface/userinterface";
+import getDataUri from "../utils/dataUri";
+import cloudinary from "cloudinary";
 interface extendedPostInterfece extends postinterface {
   comments: Array<String>;
   likes: Array<String>;
@@ -113,12 +113,26 @@ const createPost: RequestHandler = async (
   next: NextFunction
 ) => {
   try {
-    console.log(req.body);
     const { userId, description } = req.body;
-    const result = await PostModel.create({
-      description: description,
-      userId,
-    });
+    const file = req.file;
+    let result;
+    if (file) {
+      const uri = getDataUri(file);
+      if (uri.content) {
+        var uploaded = await cloudinary.v2.uploader.upload(uri.content);
+        result = await PostModel.create({
+          description: description,
+          userId,
+          image: uploaded.secure_url,
+        });
+      }
+    } else {
+      result = await PostModel.create({
+        description: description,
+        userId,
+      });
+    }
+
     if (result) {
       res.status(200).json("Posted sucessfully");
     } else {

@@ -1,22 +1,35 @@
 import { NextFunction, RequestHandler } from "express";
-import JWT, {JwtPayload } from 'jsonwebtoken';
+import JWT, { JwtPayload } from "jsonwebtoken";
 
-const verifyToken:RequestHandler=(req:any,res:any,next:NextFunction)=>{
-try{
-    const {jwt}=req.body;
-    if(!jwt){
+const verifyToken: RequestHandler = (
+  req: any,
+  res: any,
+  next: NextFunction
+) => {
+  try {
+    let { jwt } = req.body;
+    if (!jwt) {
+      const authheaders = req.headers.authorization;
+      if (authheaders) {
+        jwt = authheaders.split(" ")[1];
+      } else {
         return res.status(400).send("no jwt provided");
+      }
     }
-    JWT.verify(jwt, "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC", (err:JWT.VerifyErrors| null,user:any)=>{
-        if(err){
-            console.log(err);
-            res.status(400).send("invalid jwt")
-        }else{
-            next();
+    JWT.verify(
+      jwt,
+      "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC",
+      (err: JWT.VerifyErrors | null, user: any) => {
+        if (err) {
+          console.log(err);
+          res.status(400).send("invalid jwt");
+        } else {
+          next();
         }
-    })
-}catch(err){
+      }
+    );
+  } catch (err) {
     res.status(404).send(err);
-}
-}
-export {verifyToken};
+  }
+};
+export { verifyToken };

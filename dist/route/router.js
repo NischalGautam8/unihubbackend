@@ -12,7 +12,11 @@ const messagecontroller_1 = require("../controllers/messagecontroller");
 const commentcontrller_1 = require("../controllers/commentcontrller");
 const usercontroller_1 = require("../controllers/usercontroller");
 const multer_1 = require("../controllers/multer");
-routing.route("/posts").post(verifyToken_1.verifyToken, postcontroller_1.createPost).get(postcontroller_1.getHomePosts);
+const canViewMessage_1 = __importDefault(require("../auth/canViewMessage"));
+routing
+    .route("/posts")
+    .post(verifyToken_1.verifyToken, multer_1.singleUpload, postcontroller_1.createPost)
+    .get(postcontroller_1.getHomePosts);
 routing.route("/posts/:id").get(postcontroller_1.getonepost);
 routing.route("/posts/user/:id").get(postcontroller_1.getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken_1.verifyToken, postcontroller_1.likepost);
@@ -32,7 +36,9 @@ routing.route("/following/:id").get(usercontroller_1.getFollwing);
 //get conversations a user is involved in with userid
 routing.route("/conversation").get(messagecontroller_1.getConversations).post(messagecontroller_1.createConversation);
 //get a single conversation info and it's last 25 messages based on coversation id
-routing.route("/convoandmessage/:id").get(messagecontroller_1.getConversationAndMessages);
+routing
+    .route("/convoandmessage/:id")
+    .get(canViewMessage_1.default, messagecontroller_1.getConversationAndMessages);
 routing.route("/messeges").post(messagecontroller_1.createMessage);
 //POSTS COMMENTING
 routing.route("/comment/:id").get(commentcontrller_1.getcomments);

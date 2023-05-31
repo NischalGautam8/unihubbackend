@@ -9,6 +9,9 @@ const Post = new mongoose_1.default.Schema({
         type: String,
         required: [true, "description is must"],
     },
+    image: {
+        type: String,
+    },
     userId: {
         type: mongoose_1.default.Types.ObjectId,
         ref: "User",

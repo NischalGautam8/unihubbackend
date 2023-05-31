@@ -46,7 +46,11 @@ import {
 } from "../controllers/usercontroller";
 import { singleUpload } from "../controllers/multer";
 import verifyOwner from "../auth/verifyOwner";
-routing.route("/posts").post(verifyToken, createPost).get(getHomePosts);
+import canViewMessage from "../auth/canViewMessage";
+routing
+  .route("/posts")
+  .post(verifyToken, singleUpload, createPost)
+  .get(getHomePosts);
 routing.route("/posts/:id").get(getonepost);
 routing.route("/posts/user/:id").get(getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken, likepost);
@@ -69,7 +73,9 @@ routing.route("/following/:id").get(getFollwing);
 //get conversations a user is involved in with userid
 routing.route("/conversation").get(getConversations).post(createConversation);
 //get a single conversation info and it's last 25 messages based on coversation id
-routing.route("/convoandmessage/:id").get(getConversationAndMessages);
+routing
+  .route("/convoandmessage/:id")
+  .get(canViewMessage, getConversationAndMessages);
 routing.route("/messeges").post(createMessage);
 //POSTS COMMENTING
 routing.route("/comment/:id").get(getcomments);

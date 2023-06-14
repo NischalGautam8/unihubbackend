@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserPosts = exports.getSavedPosts = exports.unsavePost = exports.savePost = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
+exports.findPost = exports.getUserPosts = exports.getSavedPosts = exports.unsavePost = exports.savePost = exports.unlikepost = exports.getonepost = exports.getHomePosts = exports.likepost = exports.createPost = void 0;
 const postmodel_1 = __importDefault(require("../models/postmodel"));
 const usermodel_1 = __importDefault(require("../models/usermodel"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
@@ -91,6 +91,24 @@ const savePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.savePost = savePost;
+const findPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const input = req.body.input;
+        const regexQuery = new RegExp(input, "i");
+        const posts = yield postmodel_1.default.find({
+            $or: [{ description: { $regex: input } }],
+        })
+            .limit(10)
+            .skip(Number(req.query.page) - 1);
+        if (!posts)
+            return res.status(404).send("not found");
+        return res.status(200).json({ posts });
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.findPost = findPost;
 const unsavePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const remove = yield usermodel_1.default.findOneAndUpdate({ _id: req.body.id }, {

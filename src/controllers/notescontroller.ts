@@ -138,6 +138,18 @@ const getNotes: RequestHandler = async (req: Request, res: Response) => {
     return res.status(400).json(err);
   }
 };
+const findNote = async (req: Request, res: Response) => {
+  try {
+    const input = req.body.input;
+    const note = await notesModel.find({
+      $or: [{ name: { $regex: input } }, { subject: { $regex: input } }],
+    });
+    if (!note) res.status(404).send("not found");
+    return res.status(200).json(note);
+  } catch (err) {
+    console.log(err);
+  }
+};
 const uploadNote = async (req: any, res: any) => {
   try {
     const file = req.file;
@@ -168,4 +180,5 @@ export {
   getRating,
   setRating,
   getUserNotes,
+  findNote,
 };

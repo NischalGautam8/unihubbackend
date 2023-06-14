@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserNotes = exports.setRating = exports.getRating = exports.getSingleNote = exports.getNotes = exports.uploadNote = void 0;
+exports.findNote = exports.getUserNotes = exports.setRating = exports.getRating = exports.getSingleNote = exports.getNotes = exports.uploadNote = void 0;
 const notesmodel_1 = __importDefault(require("../models/notesmodel"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -146,6 +146,21 @@ const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getNotes = getNotes;
+const findNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const input = req.body.input;
+        const note = yield notesmodel_1.default.find({
+            $or: [{ name: { $regex: input } }, { subject: { $regex: input } }],
+        });
+        if (!note)
+            res.status(404).send("not found");
+        return res.status(200).json(note);
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.findNote = findNote;
 const uploadNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
     try {

@@ -83,6 +83,22 @@ const savePost: RequestHandler = async (req: Request, res: Response) => {
     console.log(err);
   }
 };
+const findPost = async (req: Request, res: Response) => {
+  try {
+    const input = req.body.input;
+    const regexQuery = new RegExp(input, "i");
+
+    const posts = await PostModel.find({
+      $or: [{ description: { $regex: input } }],
+    })
+      .limit(10)
+      .skip(Number(req.query.page) - 1);
+    if (!posts) return res.status(404).send("not found");
+    return res.status(200).json({ posts });
+  } catch (err) {
+    console.log(err);
+  }
+};
 const unsavePost: RequestHandler = async (req: Request, res: Response) => {
   try {
     const remove = await usermodel.findOneAndUpdate(
@@ -271,4 +287,5 @@ export {
   unsavePost,
   getSavedPosts,
   getUserPosts,
+  findPost,
 };

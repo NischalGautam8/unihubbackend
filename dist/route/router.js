@@ -21,6 +21,9 @@ routing.route("/posts/unlike/:id").post(verifyToken_1.verifyToken, postcontrolle
 routing.route("/posts/save/:id").post(postcontroller_1.savePost);
 routing.route("/posts/unsave/:id").post(postcontroller_1.unsavePost);
 routing.route("/posts/saved/:id").get(postcontroller_1.getSavedPosts);
+routing.route("/posts/find").get(postcontroller_1.findPost);
+routing.route("/notes/find").get(notescontroller_1.findNote);
+routing.route("/users/find/").get(usercontroller_1.findUser);
 //NOTES////
 //jwt validation is not working
 routing.route("/notes").post(multer_1.singleUpload, notescontroller_1.uploadNote).get(notescontroller_1.getNotes);

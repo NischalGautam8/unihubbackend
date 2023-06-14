@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { userinterface } from "../interface/userinterface";
+import postmodel from "../models/postmodel";
 import getDataUri from "../utils/dataUri";
 import cloudinary from "cloudinary";
 
@@ -178,6 +179,36 @@ const login = async (req: Request, res: Response) => {
     }
   }
 };
+const findUser = async (req: Request, res: Response) => {
+  try {
+    const input = req.body.input;
+    const regexQuery = new RegExp(input, "i");
+    const userquery = {
+      $or: [
+        { firstName: regexQuery },
+        { username: regexQuery },
+        { lastName: regexQuery },
+      ],
+    };
+    console.log(input);
+
+    const user = await usermodel
+      .find({
+        $or: [
+          { firstName: { $regex: input } },
+          { lastName: { $regex: input } },
+          { username: { $regex: input } },
+        ],
+      })
+      .select("username firstName lastName _id")
+      .limit(10)
+      .skip(Number(req.query.page) - 1 * 10);
+    if (user) return res.status(200).json({ user });
+    return res.status(404).send("not found");
+  } catch (err) {
+    console.log(err);
+  }
+};
 const createAcessToken = (payload: object) => {
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET as string, {
     expiresIn: "30d",
@@ -284,4 +315,5 @@ export {
   follow,
   unfollow,
   getUserInfo,
+  findUser,
 };

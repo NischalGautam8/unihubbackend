@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserInfo = exports.unfollow = exports.follow = exports.getFollowers = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
+exports.findUser = exports.getUserInfo = exports.unfollow = exports.follow = exports.getFollowers = exports.getFollwing = exports.uploadProfilePic = exports.generatenewacesstoken = exports.login = exports.register = void 0;
 const usermodel_1 = __importDefault(require("../models/usermodel"));
 const refreshtoken_1 = __importDefault(require("../models/refreshtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -197,6 +197,38 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.login = login;
+const findUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const input = req.body.input;
+        const regexQuery = new RegExp(input, "i");
+        const userquery = {
+            $or: [
+                { firstName: regexQuery },
+                { username: regexQuery },
+                { lastName: regexQuery },
+            ],
+        };
+        console.log(input);
+        const user = yield usermodel_1.default
+            .find({
+            $or: [
+                { firstName: { $regex: input } },
+                { lastName: { $regex: input } },
+                { username: { $regex: input } },
+            ],
+        })
+            .select("username firstName lastName _id")
+            .limit(10)
+            .skip(Number(req.query.page) - 1 * 10);
+        if (user)
+            return res.status(200).json({ user });
+        return res.status(404).send("not found");
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.findUser = findUser;
 const createAcessToken = (payload) => {
     return jsonwebtoken_1.default.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "30d",

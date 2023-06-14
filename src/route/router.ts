@@ -8,6 +8,7 @@ import {
   getRating,
   setRating,
   getUserNotes,
+  findNote,
 } from "../controllers/notescontroller";
 import {
   createPost,
@@ -19,6 +20,7 @@ import {
   savePost,
   unsavePost,
   getSavedPosts,
+  findPost,
 } from "../controllers/postcontroller";
 import {
   createConversation,
@@ -44,6 +46,7 @@ import {
   uploadProfilePic,
   getUserInfo,
   getFollowers,
+  findUser,
 } from "../controllers/usercontroller";
 import { singleUpload } from "../controllers/multer";
 import verifyOwner from "../auth/verifyOwner";
@@ -56,6 +59,9 @@ routing.route("/posts/unlike/:id").post(verifyToken, unlikepost);
 routing.route("/posts/save/:id").post(savePost);
 routing.route("/posts/unsave/:id").post(unsavePost);
 routing.route("/posts/saved/:id").get(getSavedPosts);
+routing.route("/posts/find").get(findPost);
+routing.route("/notes/find").get(findNote);
+routing.route("/users/find/").get(findUser);
 
 //NOTES////
 //jwt validation is not working

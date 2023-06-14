@@ -34,8 +34,8 @@ const getRating = async (req: Request, res: Response) => {
 const setRating = async (req: Request, res: Response) => {
   try {
     const { userid, rating } = req.body;
-    if(!isFinite(Number(rating))){
-      return res.status(400).send("not a finite value")
+    if (!isFinite(Number(rating))) {
+      return res.status(400).send("not a finite value");
     }
     if (Number(rating) > 5) {
       return res.status(400).send("can't rate more than 5");
@@ -77,17 +77,43 @@ const getSingleNote = async (req: Request, res: Response) => {
         (acc, cur) => acc + Number(cur),
         0
       );
-      return res
-        .status(200)
-        .json({ note, rating: sum / size, noOfRating: size, 
-        prevRated: hashmap?.get((req.query.userid)) ||" 0",
-    })
-  }else{
-    res.status(400).send('note not found');
-  } 
-}catch (err) {
+      return res.status(200).json({
+        note,
+        rating: sum / size,
+        noOfRating: size,
+        prevRated: hashmap?.get(req.query.userid) || " 0",
+      });
+    } else {
+      res.status(400).send("note not found");
+    }
+  } catch (err) {
     console.log(err);
     res.status(400).json(err);
+  }
+};
+const getUserNotes: RequestHandler = async (req: Request, res: Response) => {
+  try {
+    const page = req.query.page || 1;
+    const skip = (Number(page) - 1) * 30;
+
+    const userNotes = await notesModel
+      .find({
+        uploadedBy: req.params.id,
+      })
+      .select("_id  uploadedBy, name url size createdAt")
+      .populate({
+        path: "uploadedBy",
+        select: "_id username lastName firstName",
+      })
+      .skip(skip)
+      .sort("-createdAt");
+    if (!userNotes) {
+      return res.status(404).send("not found");
+    }
+
+    return res.status(200).json({ notes: userNotes });
+  } catch (err) {
+    console.log(err);
   }
 };
 const getNotes: RequestHandler = async (req: Request, res: Response) => {
@@ -103,7 +129,8 @@ const getNotes: RequestHandler = async (req: Request, res: Response) => {
       .populate({
         path: "uploadedBy",
         select: "_id username lastName firstName ",
-      }).sort("-createdAt");
+      })
+      .sort("-createdAt");
     const notes = await result;
 
     return res.status(200).json({ notes });
@@ -134,4 +161,11 @@ const uploadNote = async (req: any, res: any) => {
     console.log(err);
   }
 };
-export { uploadNote, getNotes, getSingleNote, getRating, setRating };
+export {
+  uploadNote,
+  getNotes,
+  getSingleNote,
+  getRating,
+  setRating,
+  getUserNotes,
+};

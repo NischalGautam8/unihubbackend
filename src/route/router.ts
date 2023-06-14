@@ -7,6 +7,7 @@ import {
   getSingleNote,
   getRating,
   setRating,
+  getUserNotes,
 } from "../controllers/notescontroller";
 import {
   createPost,
@@ -47,10 +48,7 @@ import {
 import { singleUpload } from "../controllers/multer";
 import verifyOwner from "../auth/verifyOwner";
 import canViewMessage from "../auth/canViewMessage";
-routing
-  .route("/posts")
-  .post(verifyToken, singleUpload, createPost)
-  .get(getHomePosts);
+routing.route("/posts").post(singleUpload, createPost).get(getHomePosts);
 routing.route("/posts/:id").get(getonepost);
 routing.route("/posts/user/:id").get(getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken, likepost);
@@ -60,12 +58,14 @@ routing.route("/posts/unsave/:id").post(unsavePost);
 routing.route("/posts/saved/:id").get(getSavedPosts);
 
 //NOTES////
+//jwt validation is not working
 routing.route("/notes").post(singleUpload, uploadNote).get(getNotes);
 routing.route("/notes/view/:id").get(getSingleNote);
 //comment
 routing.route("/notes/:id").post(createNotesComment).get(getNotesComment);
 //rate
 routing.route("/notes/rate/:id").get(getRating).post(setRating);
+routing.route("/notes/user/:id").get(getUserNotes);
 
 ////Follow
 routing.route("/following/:id").get(getFollwing);

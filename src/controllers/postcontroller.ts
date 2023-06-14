@@ -12,6 +12,11 @@ interface extendedPostInterfece extends postinterface {
 const getonepost: RequestHandler = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    let userid = req.query.userid as string; //the user that request for the post, we will have to see if he has liked the post or not in the server
+    if (!userid) {
+      userid = "";
+    }
     console.log(id);
     const result = await PostModel.findOne({ _id: id }).populate({
       path: "userId",
@@ -20,7 +25,17 @@ const getonepost: RequestHandler = async (req: Request, res: Response) => {
     if (!result) {
       return res.status(404).json("cannot find the post");
     } else {
-      res.status(200).json(result);
+      const toreturn = {
+        _id: result._id,
+        userId: result.userId,
+        description: result.description,
+        image: result.image,
+        commentsCount: result.comments.length,
+        likesCount: result.likes.length,
+        //@ts-expect-error
+        hasLiked: result.likes.includes(userid),
+      };
+      res.status(200).json(toreturn);
     }
   } catch (err) {
     res.status(400).json(err);
@@ -86,25 +101,31 @@ const unsavePost: RequestHandler = async (req: Request, res: Response) => {
   }
 };
 const getSavedPosts: RequestHandler = async (req: Request, res: Response) => {
-  const page: number = Number(req.query.page) || 1;
-  const userid: string = req.params.id as string;
-  const limit = 20;
-  const skip = (page - 1) * limit;
-  const savedposts = usermodel
-    .findOne({ _id: req.params.id })
-    .populate({ path: "saved" })
-    .skip(skip);
-  const toreturn: extendedPostInterfece[] = await savedposts.exec();
-  const modifiedPosts = toreturn.saved.map((post) => {
-    const modifiedPost = post.toObject();
-    modifiedPost.commentsCount = post.comments.length;
-    modifiedPost.likesCount = post.likes.length;
-    modifiedPost.hasLiked = post.likes.includes(userid);
-    delete modifiedPost.comments;
-    delete modifiedPost.likes;
-    return modifiedPost;
-  });
-  res.status(200).json({ msg: modifiedPosts });
+  try {
+    const page: number = Number(req.query.page) || 1;
+    const userid: string = req.params.id as string;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const savedposts = usermodel
+      .findOne({ _id: req.params.id })
+      .populate({ path: "saved" })
+      .skip(skip);
+    //@ts-expect-error
+    const toreturn: extendedPostInterfece[] = await savedposts.exec();
+    //@ts-expect-error
+    const modifiedPosts = toreturn.saved.map((post) => {
+      const modifiedPost = post.toObject();
+      modifiedPost.commentsCount = post.comments.length;
+      modifiedPost.likesCount = post.likes.length;
+      modifiedPost.hasLiked = post.likes.includes(userid);
+      delete modifiedPost.comments;
+      delete modifiedPost.likes;
+      return modifiedPost;
+    });
+    res.status(200).json({ msg: modifiedPosts });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 const createPost: RequestHandler = async (
@@ -179,7 +200,6 @@ const likepost: RequestHandler = async (
 ) => {
   try {
     const userid: string = req.body.userid;
-    console.log(typeof userid);
     if (!userid) {
       return res.status(500).json("userid must be sent");
     }
@@ -213,9 +233,9 @@ const likepost: RequestHandler = async (
 };
 const getUserPosts: RequestHandler = async (req: Request, res: Response) => {
   try {
-    const page: number = Number(req.params.page) || 1;
+    const page: number = Number(req.query.page) || 1;
     const userId: string = req.params.id as string;
-
+    const myid: string = (req.query.myid as string) || "";
     const postsQuery = PostModel.find({ userId: userId }).populate({
       path: "userId",
       select: "_id username lastName firstName",
@@ -225,12 +245,13 @@ const getUserPosts: RequestHandler = async (req: Request, res: Response) => {
     const limit = 20;
     const skip = (page - 1) * limit;
     const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+    //@ts-expect-error
     const toreturn: extendedPostInterfece[] = await postsQueryPaginated.exec();
     const modifiedPosts = toreturn.map((post) => {
       const modifiedPost = post.toObject();
       modifiedPost.commentsCount = post.comments.length;
       modifiedPost.likesCount = post.likes.length;
-      modifiedPost.hasLiked = post.likes.includes(userId);
+      modifiedPost.hasLiked = post.likes.includes(myid);
       delete modifiedPost.comments;
       delete modifiedPost.likes;
       return modifiedPost;

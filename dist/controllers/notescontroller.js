@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setRating = exports.getRating = exports.getSingleNote = exports.getNotes = exports.uploadNote = void 0;
+exports.getUserNotes = exports.setRating = exports.getRating = exports.getSingleNote = exports.getNotes = exports.uploadNote = void 0;
 const notesmodel_1 = __importDefault(require("../models/notesmodel"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -80,14 +80,15 @@ const getSingleNote = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const hashmap = new Map(note.ratingsMap);
             const size = hashmap.size;
             const sum = Array.from(hashmap.values()).reduce((acc, cur) => acc + Number(cur), 0);
-            return res
-                .status(200)
-                .json({ note, rating: sum / size, noOfRating: size,
-                prevRated: (hashmap === null || hashmap === void 0 ? void 0 : hashmap.get((req.query.userid))) || " 0",
+            return res.status(200).json({
+                note,
+                rating: sum / size,
+                noOfRating: size,
+                prevRated: (hashmap === null || hashmap === void 0 ? void 0 : hashmap.get(req.query.userid)) || " 0",
             });
         }
         else {
-            res.status(400).send('note not found');
+            res.status(400).send("note not found");
         }
     }
     catch (err) {
@@ -96,6 +97,31 @@ const getSingleNote = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.getSingleNote = getSingleNote;
+const getUserNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const page = req.query.page || 1;
+        const skip = (Number(page) - 1) * 30;
+        const userNotes = yield notesmodel_1.default
+            .find({
+            uploadedBy: req.params.id,
+        })
+            .select("_id  uploadedBy, name url size createdAt")
+            .populate({
+            path: "uploadedBy",
+            select: "_id username lastName firstName",
+        })
+            .skip(skip)
+            .sort("-createdAt");
+        if (!userNotes) {
+            return res.status(404).send("not found");
+        }
+        return res.status(200).json({ notes: userNotes });
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+exports.getUserNotes = getUserNotes;
 const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -110,7 +136,8 @@ const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .populate({
             path: "uploadedBy",
             select: "_id username lastName firstName ",
-        }).sort("-createdAt");
+        })
+            .sort("-createdAt");
         const notes = yield result;
         return res.status(200).json({ notes });
     }

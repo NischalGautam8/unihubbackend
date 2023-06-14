@@ -20,6 +20,10 @@ const cloudinary_1 = __importDefault(require("cloudinary"));
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
+        let userid = req.query.userid; //the user that request for the post, we will have to see if he has liked the post or not in the server
+        if (!userid) {
+            userid = "";
+        }
         console.log(id);
         const result = yield postmodel_1.default.findOne({ _id: id }).populate({
             path: "userId",
@@ -29,7 +33,17 @@ const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             return res.status(404).json("cannot find the post");
         }
         else {
-            res.status(200).json(result);
+            const toreturn = {
+                _id: result._id,
+                userId: result.userId,
+                description: result.description,
+                image: result.image,
+                commentsCount: result.comments.length,
+                likesCount: result.likes.length,
+                //@ts-expect-error
+                hasLiked: result.likes.includes(userid),
+            };
+            res.status(200).json(toreturn);
         }
     }
     catch (err) {
@@ -94,25 +108,32 @@ const unsavePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.unsavePost = unsavePost;
 const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const page = Number(req.query.page) || 1;
-    const userid = req.params.id;
-    const limit = 20;
-    const skip = (page - 1) * limit;
-    const savedposts = usermodel_1.default
-        .findOne({ _id: req.params.id })
-        .populate({ path: "saved" })
-        .skip(skip);
-    const toreturn = yield savedposts.exec();
-    const modifiedPosts = toreturn.saved.map((post) => {
-        const modifiedPost = post.toObject();
-        modifiedPost.commentsCount = post.comments.length;
-        modifiedPost.likesCount = post.likes.length;
-        modifiedPost.hasLiked = post.likes.includes(userid);
-        delete modifiedPost.comments;
-        delete modifiedPost.likes;
-        return modifiedPost;
-    });
-    res.status(200).json({ msg: modifiedPosts });
+    try {
+        const page = Number(req.query.page) || 1;
+        const userid = req.params.id;
+        const limit = 20;
+        const skip = (page - 1) * limit;
+        const savedposts = usermodel_1.default
+            .findOne({ _id: req.params.id })
+            .populate({ path: "saved" })
+            .skip(skip);
+        //@ts-expect-error
+        const toreturn = yield savedposts.exec();
+        //@ts-expect-error
+        const modifiedPosts = toreturn.saved.map((post) => {
+            const modifiedPost = post.toObject();
+            modifiedPost.commentsCount = post.comments.length;
+            modifiedPost.likesCount = post.likes.length;
+            modifiedPost.hasLiked = post.likes.includes(userid);
+            delete modifiedPost.comments;
+            delete modifiedPost.likes;
+            return modifiedPost;
+        });
+        res.status(200).json({ msg: modifiedPosts });
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 exports.getSavedPosts = getSavedPosts;
 const createPost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -177,7 +198,6 @@ exports.unlikepost = unlikepost;
 const likepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userid = req.body.userid;
-        console.log(typeof userid);
         if (!userid) {
             return res.status(500).json("userid must be sent");
         }
@@ -208,8 +228,9 @@ const likepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
 exports.likepost = likepost;
 const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const page = Number(req.params.page) || 1;
+        const page = Number(req.query.page) || 1;
         const userId = req.params.id;
+        const myid = req.query.myid || "";
         const postsQuery = postmodel_1.default.find({ userId: userId }).populate({
             path: "userId",
             select: "_id username lastName firstName",
@@ -218,12 +239,13 @@ const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const limit = 20;
         const skip = (page - 1) * limit;
         const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+        //@ts-expect-error
         const toreturn = yield postsQueryPaginated.exec();
         const modifiedPosts = toreturn.map((post) => {
             const modifiedPost = post.toObject();
             modifiedPost.commentsCount = post.comments.length;
             modifiedPost.likesCount = post.likes.length;
-            modifiedPost.hasLiked = post.likes.includes(userId);
+            modifiedPost.hasLiked = post.likes.includes(myid);
             delete modifiedPost.comments;
             delete modifiedPost.likes;
             return modifiedPost;

@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import session from "express-session";
 import routing from "./route/router";
 import passport from "passport";
-require("dotenv").parse();
+require("dotenv").config();
 import bodyParser from "body-parser";
 import cloudinary from "cloudinary";
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -76,7 +76,7 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(process.env.MONGO)
+      .connect(process.env.MONGO as string)
       .then(() =>
         httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")

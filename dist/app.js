@@ -8,7 +8,7 @@ const app = (0, express_1.default)();
 const mongoose_1 = __importDefault(require("mongoose"));
 const express_session_1 = __importDefault(require("express-session"));
 const passport_1 = __importDefault(require("passport"));
-require("dotenv").parse();
+require("dotenv").config();
 const body_parser_1 = __importDefault(require("body-parser"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
 app.use(body_parser_1.default.urlencoded({ extended: false }));

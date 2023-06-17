@@ -76,7 +76,7 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(process.env.MONGO as string)
+      .connect(process.env.MONGO)
       .then(() =>
         httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")

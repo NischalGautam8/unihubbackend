@@ -57,7 +57,6 @@ app.use("/api", notesrouter);
 app.use("/api", messagerouter);
 app.use("/api", userrouter);
 app.use("/api", postrouter);
-
 app.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile"] })
@@ -76,7 +75,9 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(process.env.MONGO as string)
+      .connect(
+        "mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority"
+      )
       .then(() =>
         httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")

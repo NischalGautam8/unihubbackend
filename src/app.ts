@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import session from "express-session";
 import routing from "./route/router";
 import passport from "passport";
+require("dotenv").parse();
 import bodyParser from "body-parser";
 import cloudinary from "cloudinary";
 app.use(bodyParser.urlencoded({ extended: false }));

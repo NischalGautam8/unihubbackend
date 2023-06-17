@@ -75,9 +75,7 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(
-        "mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority"
-      )
+      .connect(process.env.MONGO as string)
       .then(() =>
         httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")

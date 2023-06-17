@@ -1,9 +1,13 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import PostModel from "../models/postmodel";
-import { postinterface } from "../interface/postinterface";
+import {
+  originalpostinterface,
+  postinterface,
+} from "../interface/postinterface";
 import usermodel from "../models/usermodel";
 import getDataUri from "../utils/dataUri";
 import cloudinary from "cloudinary";
+import { returnablePost } from "../utils/returnablePosts";
 interface extendedPostInterfece extends postinterface {
   comments: Array<String>;
   likes: Array<String>;
@@ -56,16 +60,16 @@ const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
   const skip = (page - 1) * limit;
   const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
   const toreturn: extendedPostInterfece[] = await postsQueryPaginated.exec();
-  const modifiedPosts = toreturn.map((post) => {
-    const modifiedPost = post.toObject();
-    modifiedPost.commentsCount = post.comments.length;
-    modifiedPost.likesCount = post.likes.length;
-    modifiedPost.hasLiked = post.likes.includes(userid);
-    delete modifiedPost.comments;
-    delete modifiedPost.likes;
-    return modifiedPost;
-  });
-  res.status(200).json({ msg: modifiedPosts });
+  // const modifiedPosts = toreturn.map((post) => {
+  //   const modifiedPost = post.toObject();
+  //   modifiedPost.commentsCount = post.comments.length;
+  //   modifiedPost.likesCount = post.likes.length;
+  //   modifiedPost.hasLiked = post.likes.includes(userid);
+  //   delete modifiedPost.comments;
+  //   delete modifiedPost.likes;
+  //   return modifiedPost;
+  // });
+  res.status(200).json({ msg: returnablePost(toreturn, userid) });
 };
 const savePost: RequestHandler = async (req: Request, res: Response) => {
   try {
@@ -85,16 +89,19 @@ const savePost: RequestHandler = async (req: Request, res: Response) => {
 };
 const findPost = async (req: Request, res: Response) => {
   try {
-    const input = req.body.input;
-    const regexQuery = new RegExp(input, "i");
-
-    const posts = await PostModel.find({
+    const input = req.query.querystring;
+    const userid = req.query.userid;
+    console.log("input", input);
+    const posts: Array<originalpostinterface> = await PostModel.find({
       $or: [{ description: { $regex: input } }],
     })
       .limit(10)
-      .skip(Number(req.query.page) - 1);
+      .skip(Number(req.query.page) - 1)
+      .populate({ path: "userId", select: "_id username lastName firstName" });
     if (!posts) return res.status(404).send("not found");
-    return res.status(200).json({ posts });
+    return res
+      .status(200)
+      .json({ posts: returnablePost(posts, userid as string) });
   } catch (err) {
     console.log(err);
   }
@@ -129,16 +136,16 @@ const getSavedPosts: RequestHandler = async (req: Request, res: Response) => {
     //@ts-expect-error
     const toreturn: extendedPostInterfece[] = await savedposts.exec();
     //@ts-expect-error
-    const modifiedPosts = toreturn.saved.map((post) => {
-      const modifiedPost = post.toObject();
-      modifiedPost.commentsCount = post.comments.length;
-      modifiedPost.likesCount = post.likes.length;
-      modifiedPost.hasLiked = post.likes.includes(userid);
-      delete modifiedPost.comments;
-      delete modifiedPost.likes;
-      return modifiedPost;
-    });
-    res.status(200).json({ msg: modifiedPosts });
+    // const modifiedPosts = toreturn.saved.map((post) => {
+    //   const modifiedPost = post.toObject();
+    //   modifiedPost.commentsCount = post.comments.length;
+    //   modifiedPost.likesCount = post.likes.length;
+    //   modifiedPost.hasLiked = post.likes.includes(userid);
+    //   delete modifiedPost.comments;
+    //   delete modifiedPost.likes;
+    //   return modifiedPost;
+    // });
+    res.status(200).json({ msg: returnablePost(toreturn) });
   } catch (err) {
     console.log(err);
   }
@@ -220,6 +227,7 @@ const likepost: RequestHandler = async (
       return res.status(500).json("userid must be sent");
     }
     const { id } = req.params;
+    console.log("id", id);
     const post = await PostModel.findOne(
       {
         _id: id,

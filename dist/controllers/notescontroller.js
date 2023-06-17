@@ -130,7 +130,7 @@ const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log(subject);
         const result = notesmodel_1.default
             .find(subject ? { subject } : {})
-            .select(" _id uploadedBy  name url size createdAt")
+            .select(" _id uploadedBy  name url size subject createdAt")
             .skip((Number(page) - 1) * 30)
             .limit(30)
             .populate({
@@ -148,10 +148,18 @@ const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getNotes = getNotes;
 const findNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const input = req.body.input;
-        const note = yield notesmodel_1.default.find({
+        const input = req.query.querystring;
+        console.log(input);
+        const note = yield notesmodel_1.default
+            .find({
             $or: [{ name: { $regex: input } }, { subject: { $regex: input } }],
-        });
+        })
+            .populate({
+            path: "uploadedBy",
+            select: "_id username lastName firstName",
+        })
+            .limit(10)
+            .skip(Number(req.query.page) - 1 * 10);
         if (!note)
             res.status(404).send("not found");
         return res.status(200).json(note);

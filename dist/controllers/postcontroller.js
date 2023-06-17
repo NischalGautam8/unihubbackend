@@ -17,6 +17,7 @@ const postmodel_1 = __importDefault(require("../models/postmodel"));
 const usermodel_1 = __importDefault(require("../models/usermodel"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const returnablePosts_1 = require("../utils/returnablePosts");
 const getonepost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
@@ -64,16 +65,16 @@ const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const skip = (page - 1) * limit;
     const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
     const toreturn = yield postsQueryPaginated.exec();
-    const modifiedPosts = toreturn.map((post) => {
-        const modifiedPost = post.toObject();
-        modifiedPost.commentsCount = post.comments.length;
-        modifiedPost.likesCount = post.likes.length;
-        modifiedPost.hasLiked = post.likes.includes(userid);
-        delete modifiedPost.comments;
-        delete modifiedPost.likes;
-        return modifiedPost;
-    });
-    res.status(200).json({ msg: modifiedPosts });
+    // const modifiedPosts = toreturn.map((post) => {
+    //   const modifiedPost = post.toObject();
+    //   modifiedPost.commentsCount = post.comments.length;
+    //   modifiedPost.likesCount = post.likes.length;
+    //   modifiedPost.hasLiked = post.likes.includes(userid);
+    //   delete modifiedPost.comments;
+    //   delete modifiedPost.likes;
+    //   return modifiedPost;
+    // });
+    res.status(200).json({ msg: (0, returnablePosts_1.returnablePost)(toreturn, userid) });
 });
 exports.getHomePosts = getHomePosts;
 const savePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -93,16 +94,20 @@ const savePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.savePost = savePost;
 const findPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const input = req.body.input;
-        const regexQuery = new RegExp(input, "i");
+        const input = req.query.querystring;
+        const userid = req.query.userid;
+        console.log("input", input);
         const posts = yield postmodel_1.default.find({
             $or: [{ description: { $regex: input } }],
         })
             .limit(10)
-            .skip(Number(req.query.page) - 1);
+            .skip(Number(req.query.page) - 1)
+            .populate({ path: "userId", select: "_id username lastName firstName" });
         if (!posts)
             return res.status(404).send("not found");
-        return res.status(200).json({ posts });
+        return res
+            .status(200)
+            .json({ posts: (0, returnablePosts_1.returnablePost)(posts, userid) });
     }
     catch (err) {
         console.log(err);
@@ -138,16 +143,16 @@ const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         //@ts-expect-error
         const toreturn = yield savedposts.exec();
         //@ts-expect-error
-        const modifiedPosts = toreturn.saved.map((post) => {
-            const modifiedPost = post.toObject();
-            modifiedPost.commentsCount = post.comments.length;
-            modifiedPost.likesCount = post.likes.length;
-            modifiedPost.hasLiked = post.likes.includes(userid);
-            delete modifiedPost.comments;
-            delete modifiedPost.likes;
-            return modifiedPost;
-        });
-        res.status(200).json({ msg: modifiedPosts });
+        // const modifiedPosts = toreturn.saved.map((post) => {
+        //   const modifiedPost = post.toObject();
+        //   modifiedPost.commentsCount = post.comments.length;
+        //   modifiedPost.likesCount = post.likes.length;
+        //   modifiedPost.hasLiked = post.likes.includes(userid);
+        //   delete modifiedPost.comments;
+        //   delete modifiedPost.likes;
+        //   return modifiedPost;
+        // });
+        res.status(200).json({ msg: (0, returnablePosts_1.returnablePost)(toreturn) });
     }
     catch (err) {
         console.log(err);
@@ -220,6 +225,7 @@ const likepost = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             return res.status(500).json("userid must be sent");
         }
         const { id } = req.params;
+        console.log("id", id);
         const post = yield postmodel_1.default.findOne({
             _id: id,
             likes: userid,

@@ -52,6 +52,8 @@ import { singleUpload } from "../controllers/multer";
 import verifyOwner from "../auth/verifyOwner";
 import canViewMessage from "../auth/canViewMessage";
 routing.route("/posts").post(singleUpload, createPost).get(getHomePosts);
+routing.route("/users/find/").get(findUser);
+routing.route("/posts/find/").get(findPost);
 routing.route("/posts/:id").get(getonepost);
 routing.route("/posts/user/:id").get(getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken, likepost);
@@ -59,15 +61,13 @@ routing.route("/posts/unlike/:id").post(verifyToken, unlikepost);
 routing.route("/posts/save/:id").post(savePost);
 routing.route("/posts/unsave/:id").post(unsavePost);
 routing.route("/posts/saved/:id").get(getSavedPosts);
-routing.route("/posts/find").get(findPost);
-routing.route("/notes/find").get(findNote);
-routing.route("/users/find/").get(findUser);
 
 //NOTES////
 //jwt validation is not working
 routing.route("/notes").post(singleUpload, uploadNote).get(getNotes);
 routing.route("/notes/view/:id").get(getSingleNote);
 //comment
+routing.route("/notes/find/").get(findNote);
 routing.route("/notes/:id").post(createNotesComment).get(getNotesComment);
 //rate
 routing.route("/notes/rate/:id").get(getRating).post(setRating);

@@ -123,7 +123,7 @@ const getNotes: RequestHandler = async (req: Request, res: Response) => {
     console.log(subject);
     const result = notesModel
       .find(subject ? { subject } : {})
-      .select(" _id uploadedBy  name url size createdAt")
+      .select(" _id uploadedBy  name url size subject createdAt")
       .skip((Number(page) - 1) * 30)
       .limit(30)
       .populate({
@@ -140,10 +140,18 @@ const getNotes: RequestHandler = async (req: Request, res: Response) => {
 };
 const findNote = async (req: Request, res: Response) => {
   try {
-    const input = req.body.input;
-    const note = await notesModel.find({
-      $or: [{ name: { $regex: input } }, { subject: { $regex: input } }],
-    });
+    const input = req.query.querystring;
+    console.log(input);
+    const note = await notesModel
+      .find({
+        $or: [{ name: { $regex: input } }, { subject: { $regex: input } }],
+      })
+      .populate({
+        path: "uploadedBy",
+        select: "_id username lastName firstName",
+      })
+      .limit(10)
+      .skip(Number(req.query.page) - 1 * 10);
     if (!note) res.status(404).send("not found");
     return res.status(200).json(note);
   } catch (err) {

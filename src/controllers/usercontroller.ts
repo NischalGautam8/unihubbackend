@@ -30,7 +30,8 @@ const getUserInfo: RequestHandler = async (req: Request, res: Response) => {
       gender: user.gender,
       followerCount: user.followers.length,
       followingCount: user.following.length,
-      doYouFollow: user.followers.includes(req.query.myid as string),
+      //@ts-expect-error
+      doYouFollow: user.followers.includes(req.query.myid),
     };
     return res.status(200).json({ user: toreturn });
   } catch (err) {
@@ -42,6 +43,7 @@ const getFollowers: RequestHandler = async (req: Request, res: Response) => {
   try {
     const page = req.query.page || 1;
     const skip = (Number(page) - 1) * 30;
+    //@ts-expect-error
     const user: userinterface = await usermodel
       .findOne({ _id: req.params.id })
       .populate("followers", "-password   -email  -createdAt -updatedAt")
@@ -50,11 +52,13 @@ const getFollowers: RequestHandler = async (req: Request, res: Response) => {
       return res.status(404).send("no user found");
     } else {
       console.log(user);
+      //@ts-expect-error
       const toreturn = user.followers.map((follower: userinterface) => {
         const obj = {
           _id: follower._id,
           firstName: follower.firstName,
           lastName: follower.lastName,
+          //@ts-expect-error
           doYouFollow: follower.followers.includes(req.query.id),
         };
         return obj;
@@ -72,6 +76,7 @@ const getFollwing = async (req: Request, res: Response) => {
   try {
     const page = req.query.page || 1;
     const skip = (Number(page) - 1) * 30;
+    //@ts-expect-error
     const user: userinterface = await usermodel
       .findOne({ _id: req.params.id })
       .populate("following", "-password -email  -createdAt -updatedAt")
@@ -79,12 +84,15 @@ const getFollwing = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json("cannot get following");
     }
+    //@ts-expect-error
     const toreturn = user.following.map((follower: userinterface) => {
       const obj = {
         _id: follower._id,
         firstName: follower.firstName,
         lastName: follower.lastName,
+        //@ts-expect-error
         doYouFollow: follower.followers.includes(req.query.id),
+        //@ts-expect-error
         isFriend: follower.following.includes(req.params.id),
       };
       return obj;
@@ -117,6 +125,7 @@ const register: RequestHandler = async (req: Request, res: Response) => {
     });
     if (usernametaken)
       return res.status(400).json({ err: "username is already taken" });
+    //@ts-expect-error
     const user: userinterface = await usermodel.create({
       username: req.body.username,
       lastName: req.body.lastName,
@@ -161,7 +170,7 @@ const login = async (req: Request, res: Response) => {
   if (!result) {
     return res.status(404).json({ err: "no user found" });
   } else {
-    if (!bcrypt.compare(password, result.password)) {
+    if (!bcrypt.compare(password, result.password as string)) {
       res.status(500).json({ msg: "wrong password" });
     } else {
       const acess_token = createAcessToken({ id: result._id });
@@ -181,16 +190,14 @@ const login = async (req: Request, res: Response) => {
 };
 const findUser = async (req: Request, res: Response) => {
   try {
-    const input = req.body.input;
-    const regexQuery = new RegExp(input, "i");
-    const userquery = {
-      $or: [
-        { firstName: regexQuery },
-        { username: regexQuery },
-        { lastName: regexQuery },
-      ],
-    };
-    console.log(input);
+    const input = req.query.querystring;
+    // const userquery = {
+    //   $or: [
+    //     { firstName: regexQuery },
+    //     { username: regexQuery },
+    //     { lastName: regexQuery },
+    //   ],
+    // };
 
     const user = await usermodel
       .find({
@@ -229,6 +236,7 @@ const generatenewacesstoken: RequestHandler = async (
     if (!refTokenOnDB) {
       return res.status(400).json({ err: "invalid refresh token" });
     }
+    //@ts-expect-error
     const acesstoken = createAcessToken({ _id: refTokenOnDB.user });
     return res.status(200).json({ acesstoken });
   } catch (err) {
@@ -240,7 +248,9 @@ const uploadProfilePic = async (req: any, res: Response) => {
   try {
     const f = req.file;
     const fileUri = getDataUri(f);
-    const mycloud = await cloudinary.v2.uploader.upload(fileUri.content);
+    const mycloud = await cloudinary.v2.uploader.upload(
+      fileUri.content as string
+    );
     const update = await usermodel.findByIdAndUpdate(
       { _id: req.body.id },
       {

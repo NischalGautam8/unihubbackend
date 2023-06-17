@@ -38,6 +38,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             gender: user.gender,
             followerCount: user.followers.length,
             followingCount: user.following.length,
+            //@ts-expect-error
             doYouFollow: user.followers.includes(req.query.myid),
         };
         return res.status(200).json({ user: toreturn });
@@ -52,6 +53,7 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const page = req.query.page || 1;
         const skip = (Number(page) - 1) * 30;
+        //@ts-expect-error
         const user = yield usermodel_1.default
             .findOne({ _id: req.params.id })
             .populate("followers", "-password   -email  -createdAt -updatedAt")
@@ -61,11 +63,13 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         }
         else {
             console.log(user);
+            //@ts-expect-error
             const toreturn = user.followers.map((follower) => {
                 const obj = {
                     _id: follower._id,
                     firstName: follower.firstName,
                     lastName: follower.lastName,
+                    //@ts-expect-error
                     doYouFollow: follower.followers.includes(req.query.id),
                 };
                 return obj;
@@ -85,6 +89,7 @@ const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const page = req.query.page || 1;
         const skip = (Number(page) - 1) * 30;
+        //@ts-expect-error
         const user = yield usermodel_1.default
             .findOne({ _id: req.params.id })
             .populate("following", "-password -email  -createdAt -updatedAt")
@@ -92,12 +97,15 @@ const getFollwing = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!user) {
             return res.status(404).json("cannot get following");
         }
+        //@ts-expect-error
         const toreturn = user.following.map((follower) => {
             const obj = {
                 _id: follower._id,
                 firstName: follower.firstName,
                 lastName: follower.lastName,
+                //@ts-expect-error
                 doYouFollow: follower.followers.includes(req.query.id),
+                //@ts-expect-error
                 isFriend: follower.following.includes(req.params.id),
             };
             return obj;
@@ -131,6 +139,7 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         if (usernametaken)
             return res.status(400).json({ err: "username is already taken" });
+        //@ts-expect-error
         const user = yield usermodel_1.default.create({
             username: req.body.username,
             lastName: req.body.lastName,
@@ -199,16 +208,14 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.login = login;
 const findUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const input = req.body.input;
-        const regexQuery = new RegExp(input, "i");
-        const userquery = {
-            $or: [
-                { firstName: regexQuery },
-                { username: regexQuery },
-                { lastName: regexQuery },
-            ],
-        };
-        console.log(input);
+        const input = req.query.querystring;
+        // const userquery = {
+        //   $or: [
+        //     { firstName: regexQuery },
+        //     { username: regexQuery },
+        //     { lastName: regexQuery },
+        //   ],
+        // };
         const user = yield usermodel_1.default
             .find({
             $or: [
@@ -246,6 +253,7 @@ const generatenewacesstoken = (req, res) => __awaiter(void 0, void 0, void 0, fu
         if (!refTokenOnDB) {
             return res.status(400).json({ err: "invalid refresh token" });
         }
+        //@ts-expect-error
         const acesstoken = createAcessToken({ _id: refTokenOnDB.user });
         return res.status(200).json({ acesstoken });
     }

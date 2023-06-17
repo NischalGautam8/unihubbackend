@@ -14,6 +14,8 @@ const usercontroller_1 = require("../controllers/usercontroller");
 const multer_1 = require("../controllers/multer");
 const canViewMessage_1 = __importDefault(require("../auth/canViewMessage"));
 routing.route("/posts").post(multer_1.singleUpload, postcontroller_1.createPost).get(postcontroller_1.getHomePosts);
+routing.route("/users/find/").get(usercontroller_1.findUser);
+routing.route("/posts/find/").get(postcontroller_1.findPost);
 routing.route("/posts/:id").get(postcontroller_1.getonepost);
 routing.route("/posts/user/:id").get(postcontroller_1.getUserPosts);
 routing.route("/posts/like/:id").post(verifyToken_1.verifyToken, postcontroller_1.likepost);
@@ -21,14 +23,12 @@ routing.route("/posts/unlike/:id").post(verifyToken_1.verifyToken, postcontrolle
 routing.route("/posts/save/:id").post(postcontroller_1.savePost);
 routing.route("/posts/unsave/:id").post(postcontroller_1.unsavePost);
 routing.route("/posts/saved/:id").get(postcontroller_1.getSavedPosts);
-routing.route("/posts/find").get(postcontroller_1.findPost);
-routing.route("/notes/find").get(notescontroller_1.findNote);
-routing.route("/users/find/").get(usercontroller_1.findUser);
 //NOTES////
 //jwt validation is not working
 routing.route("/notes").post(multer_1.singleUpload, notescontroller_1.uploadNote).get(notescontroller_1.getNotes);
 routing.route("/notes/view/:id").get(notescontroller_1.getSingleNote);
 //comment
+routing.route("/notes/find/").get(notescontroller_1.findNote);
 routing.route("/notes/:id").post(commentcontrller_1.createNotesComment).get(commentcontrller_1.getNotesComment);
 //rate
 routing.route("/notes/rate/:id").get(notescontroller_1.getRating).post(notescontroller_1.setRating);

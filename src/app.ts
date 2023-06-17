@@ -6,7 +6,6 @@ import routing from "./route/router";
 import passport from "passport";
 import bodyParser from "body-parser";
 import cloudinary from "cloudinary";
-import GoogleStrategy from "./passportmiddleware";
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 import dotenv from "dotenv";
@@ -21,6 +20,11 @@ import http from "http";
 const httpserver = http.createServer(app);
 import { Server } from "socket.io";
 import { newMessageSocket } from "./controllers/messagecontroller";
+import userrouter from "./route/userrouter";
+import commentsroute from "./route/commentsrouter";
+import notesrouter from "./route/notesroute";
+import messagerouter from "./route/messagerouter";
+import postrouter from "./route/postrouter";
 //cloudinary setup
 cloudinary.v2.config({
   cloud_name: "ds8b7v9pf",
@@ -35,9 +39,9 @@ const io = new Server(httpserver, {
 });
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
-  socket.on("join_room", (data,jwt) => {
+  socket.on("join_room", (data, jwt) => {
     socket.join(data);
-    console.log("jwt",jwt);
+    console.log("jwt", jwt);
     ///TODO:JWT authenticate on room join
     console.log("joined room ", data);
   });
@@ -47,7 +51,13 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("receive_message", data);
   });
 });
-app.use("/api", routing);
+// app.use("/api", routing);
+app.use("/api", commentsroute);
+app.use("/api", notesrouter);
+app.use("/api", messagerouter);
+app.use("/api", userrouter);
+app.use("/api", postrouter);
+
 app.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile"] })
@@ -66,9 +76,7 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(
-        "mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority"
-      )
+      .connect(process.env.MONGO as string)
       .then(() =>
         httpserver.listen(5000, () =>
           console.log("connected to the database & listening to port")

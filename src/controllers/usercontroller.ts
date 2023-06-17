@@ -4,7 +4,6 @@ import { RequestHandler, Request, Response } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcrypt";
-import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { userinterface } from "../interface/userinterface";
 import postmodel from "../models/postmodel";

@@ -7,7 +7,6 @@ const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 const mongoose_1 = __importDefault(require("mongoose"));
 const express_session_1 = __importDefault(require("express-session"));
-const router_1 = __importDefault(require("./route/router"));
 const passport_1 = __importDefault(require("passport"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
@@ -25,6 +24,11 @@ const http_1 = __importDefault(require("http"));
 const httpserver = http_1.default.createServer(app);
 const socket_io_1 = require("socket.io");
 const messagecontroller_1 = require("./controllers/messagecontroller");
+const userrouter_1 = __importDefault(require("./route/userrouter"));
+const commentsrouter_1 = __importDefault(require("./route/commentsrouter"));
+const notesroute_1 = __importDefault(require("./route/notesroute"));
+const messagerouter_1 = __importDefault(require("./route/messagerouter"));
+const postrouter_1 = __importDefault(require("./route/postrouter"));
 //cloudinary setup
 cloudinary_1.default.v2.config({
     cloud_name: "ds8b7v9pf",
@@ -51,7 +55,12 @@ io.on("connection", (socket) => {
         socket.broadcast.emit("receive_message", data);
     });
 });
-app.use("/api", router_1.default);
+// app.use("/api", routing);
+app.use("/api", commentsrouter_1.default);
+app.use("/api", notesroute_1.default);
+app.use("/api", messagerouter_1.default);
+app.use("/api", userrouter_1.default);
+app.use("/api", postrouter_1.default);
 app.get("/auth/google", passport_1.default.authenticate("google", { scope: ["profile"] }));
 app.get("/auth/callback", passport_1.default.authenticate("google", {
     successRedirect: "/",
@@ -62,7 +71,7 @@ app.get("/auth/callback", passport_1.default.authenticate("google", {
 const start = () => {
     try {
         mongoose_1.default
-            .connect("mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority")
+            .connect(process.env.MONGO)
             .then(() => httpserver.listen(5000, () => console.log("connected to the database & listening to port")));
     }
     catch (err) {

@@ -50,6 +50,7 @@ const setRating = async (req: Request, res: Response) => {
       { new: true }
     );
     if (!doc) return res.status(400).send("unable to rate the note");
+    //@ts-expect-error
     const hashmap: Map<string, string> = doc.ratingsMap;
     const size = hashmap?.size;
     const sum = Array.from(hashmap.values()).reduce<number>(
@@ -81,7 +82,7 @@ const getSingleNote = async (req: Request, res: Response) => {
         note,
         rating: sum / size,
         noOfRating: size,
-        prevRated: hashmap?.get(req.query.userid) || " 0",
+        prevRated: hashmap?.get(req.query.userid as string) || " 0",
       });
     } else {
       res.status(400).send("note not found");
@@ -124,8 +125,8 @@ const getNotes: RequestHandler = async (req: Request, res: Response) => {
     const result = notesModel
       .find(subject ? { subject } : {})
       .select(" _id uploadedBy  name url size subject createdAt")
-      .skip((Number(page) - 1) * 30)
-      .limit(30)
+      .skip((Number(page) - 1) * 10)
+      .limit(10)
       .populate({
         path: "uploadedBy",
         select: "_id username lastName firstName ",
@@ -163,6 +164,7 @@ const uploadNote = async (req: any, res: any) => {
     const file = req.file;
     console.log(file);
     const uri = getDataUri(file);
+    //@ts-expect-error
     const uploaded = await cloudinary.v2.uploader.upload(uri.content);
     console.log(uploaded.secure_url);
     const newFile = await notesModel.create({

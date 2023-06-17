@@ -64,6 +64,7 @@ const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = 20;
     const skip = (page - 1) * limit;
     const postsQueryPaginated = postsQuery.skip(skip).limit(limit);
+    //@ts-expect-error
     const toreturn = yield postsQueryPaginated.exec();
     // const modifiedPosts = toreturn.map((post) => {
     //   const modifiedPost = post.toObject();
@@ -138,21 +139,16 @@ const getSavedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const skip = (page - 1) * limit;
         const savedposts = usermodel_1.default
             .findOne({ _id: req.params.id })
-            .populate({ path: "saved" })
+            .select("saved")
+            .populate({
+            path: "saved",
+            populate: { path: "userId", select: "username lastName firstName _id" },
+        })
             .skip(skip);
         //@ts-expect-error
         const toreturn = yield savedposts.exec();
         //@ts-expect-error
-        // const modifiedPosts = toreturn.saved.map((post) => {
-        //   const modifiedPost = post.toObject();
-        //   modifiedPost.commentsCount = post.comments.length;
-        //   modifiedPost.likesCount = post.likes.length;
-        //   modifiedPost.hasLiked = post.likes.includes(userid);
-        //   delete modifiedPost.comments;
-        //   delete modifiedPost.likes;
-        //   return modifiedPost;
-        // });
-        res.status(200).json({ msg: (0, returnablePosts_1.returnablePost)(toreturn) });
+        res.status(200).json({ msg: (0, returnablePosts_1.returnablePost)(toreturn.saved) });
     }
     catch (err) {
         console.log(err);

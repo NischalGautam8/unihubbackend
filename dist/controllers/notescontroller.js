@@ -57,6 +57,7 @@ const setRating = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }, { new: true });
         if (!doc)
             return res.status(400).send("unable to rate the note");
+        //@ts-expect-error
         const hashmap = doc.ratingsMap;
         const size = hashmap === null || hashmap === void 0 ? void 0 : hashmap.size;
         const sum = Array.from(hashmap.values()).reduce((acc, cur) => acc + Number(cur), 0);
@@ -131,8 +132,8 @@ const getNotes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const result = notesmodel_1.default
             .find(subject ? { subject } : {})
             .select(" _id uploadedBy  name url size subject createdAt")
-            .skip((Number(page) - 1) * 30)
-            .limit(30)
+            .skip((Number(page) - 1) * 10)
+            .limit(10)
             .populate({
             path: "uploadedBy",
             select: "_id username lastName firstName ",
@@ -175,6 +176,7 @@ const uploadNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const file = req.file;
         console.log(file);
         const uri = (0, dataUri_1.default)(file);
+        //@ts-expect-error
         const uploaded = yield cloudinary_1.default.v2.uploader.upload(uri.content);
         console.log(uploaded.secure_url);
         const newFile = yield notesmodel_1.default.create({

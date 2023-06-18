@@ -10,7 +10,7 @@ const canViewMessage = async (req: any, res: any, next: NextFunction) => {
     if (!jwt) return res.status(400).json({ err: "provide jwt" });
     JWT.verify(
       jwt,
-      process.env.REFRESH_TOKEN_SECRET as string,
+      "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC",
       async (err: JWT.VerifyErrors | null, user: any) => {
         if (err) {
           res.status(400).send("invalid jwt");

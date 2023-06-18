@@ -1,8 +1,4 @@
 import { NextFunction } from "express";
-import conversationmodel from "../models/conversationmodel";
-import comment from "../models/commentmodel";
-import Postexport from "../models/postmodel";
-import notesModel from "../models/notesmodel";
 import JWT from "jsonwebtoken";
 const verifyOwner = (req: any, res: any, next: NextFunction) => {
   try {
@@ -12,7 +8,7 @@ const verifyOwner = (req: any, res: any, next: NextFunction) => {
     }
     JWT.verify(
       jwt,
-      process.env.REFRESH_TOKEN_SECRET as string,
+      "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC",
       (err: JWT.VerifyErrors | null, user: any) => {
         if (err) {
           res.status(400).send("invalid jwt");

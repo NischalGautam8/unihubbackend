@@ -10,7 +10,7 @@ const verifyOwner = (req, res, next) => {
         if (!jwt) {
             res.status(404).send("no jwt provided");
         }
-        jsonwebtoken_1.default.verify(jwt, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+        jsonwebtoken_1.default.verify(jwt, "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC", (err, user) => {
             if (err) {
                 res.status(400).send("invalid jwt");
             }

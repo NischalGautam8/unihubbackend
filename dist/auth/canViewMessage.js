@@ -22,7 +22,7 @@ const canViewMessage = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         }
         if (!jwt)
             return res.status(400).json({ err: "provide jwt" });
-        jsonwebtoken_1.default.verify(jwt, process.env.REFRESH_TOKEN_SECRET, (err, user) => __awaiter(void 0, void 0, void 0, function* () {
+        jsonwebtoken_1.default.verify(jwt, "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC", (err, user) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 res.status(400).send("invalid jwt");
             }

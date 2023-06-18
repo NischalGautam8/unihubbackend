@@ -18,7 +18,7 @@ const verifyToken: RequestHandler = (
     }
     JWT.verify(
       jwt,
-      process.env.REFRESH_TOKEN_SECRET as string,
+     "jfjfjadklfjdskjfkdjfJkjkJKLJK45049DKLSC",
       (err: JWT.VerifyErrors | null, user: any) => {
         if (err) {
           console.log(err);

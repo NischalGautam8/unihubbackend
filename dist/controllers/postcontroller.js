@@ -56,10 +56,12 @@ exports.getonepost = getonepost;
 const getHomePosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = Number(req.query.page) || 1;
     const userid = req.query.userid;
-    const postsQuery = postmodel_1.default.find().populate({
+    const postsQuery = postmodel_1.default.find()
+        .populate({
         path: "userId",
         select: "_id username lastName firstName",
-    });
+    })
+        .sort({ createdAt: -1 });
     //TODO : SEND likes and comment count sepertely
     const limit = 20;
     const skip = (page - 1) * limit;

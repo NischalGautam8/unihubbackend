@@ -50,10 +50,12 @@ const getHomePosts: RequestHandler = async (req: Request, res: Response) => {
   const page: number = Number(req.query.page) || 1;
   const userid: string = req.query.userid as string;
 
-  const postsQuery = PostModel.find().populate({
-    path: "userId",
-    select: "_id username lastName firstName",
-  });
+  const postsQuery = PostModel.find()
+    .populate({
+      path: "userId",
+      select: "_id username lastName firstName",
+    })
+    .sort({ createdAt: -1 });
   //TODO : SEND likes and comment count sepertely
 
   const limit = 20;

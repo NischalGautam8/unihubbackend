@@ -26,6 +26,7 @@ const getUserInfo: RequestHandler = async (req: Request, res: Response) => {
       lastName: user.lastName,
       username: user.username,
       createdAt: user.createdAt,
+      profilepic:user.profilepic,
       gender: user.gender,
       followerCount: user.followers.length,
       followingCount: user.following.length,

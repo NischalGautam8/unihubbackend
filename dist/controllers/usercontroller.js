@@ -35,6 +35,7 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             lastName: user.lastName,
             username: user.username,
             createdAt: user.createdAt,
+            profilepic: user.profilepic,
             gender: user.gender,
             followerCount: user.followers.length,
             followingCount: user.following.length,

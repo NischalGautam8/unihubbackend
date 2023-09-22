@@ -34,7 +34,7 @@ cloudinary.v2.config({
 });
 const io = new Server(httpserver, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001","https://unihubfrontend-1fhxgei0a-headshigh.vercel.app/"],
+    origin: ["http://localhost:3000", "http://localhost:3001","https://unihubfrontend-1fhxgei0a-headshigh.vercel.app"],
     methods: ["GET", "POST"],
   },
 });

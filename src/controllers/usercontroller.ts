@@ -9,36 +9,49 @@ import { userinterface } from "../interface/userinterface";
 import postmodel from "../models/postmodel";
 import getDataUri from "../utils/dataUri";
 import cloudinary from "cloudinary";
-
+import mongoose from "mongoose";
 const getUserInfo: RequestHandler = async (req: Request, res: Response) => {
   try {
     const user = await usermodel
       .findOne({ _id: req.params.userid })
       .select(
-        "firstName lastName username profilepic gender createdAt followers following "
+        "firstName lastName username profilepic gender createdAt followers following"
       );
+
     if (!user) {
-      return res.status(404).json({ err: "user doesnot exist" });
+      return res.status(404).json({ err: "User does not exist" });
     }
-    console.log("requesiting", req.query.myid);
+
+    console.log("Requesting", req.query.myid);
+
+    // Convert req.query.myid to ObjectId for proper comparison
+    const myId = req.query.myid as string;
+    const myObjectId = mongoose.Types.ObjectId.isValid(myId)
+      ? new mongoose.Types.ObjectId(myId)
+      : null;
+
     const toreturn = {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
       createdAt: user.createdAt,
-      profilepic:user.profilepic,
+      profilepic: user.profilepic,
       gender: user.gender,
       followerCount: user.followers.length,
       followingCount: user.following.length,
+      doYouFollow: myObjectId
       //@ts-expect-error
-      doYouFollow: user.followers.includes(req.query.myid),
+        ? user.followers.some((followerId) => followerId.equals(myObjectId))
+        : false, // Ensure proper ObjectId comparison
     };
+
     return res.status(200).json({ user: toreturn });
   } catch (err) {
-    console.log(err);
-    res.status(400).json(err);
+    console.error(err);
+    res.status(400).json({ error: "An error occurred" });
   }
 };
+
 const getFollowers: RequestHandler = async (req: Request, res: Response) => {
   try {
     const page = req.query.page || 1;

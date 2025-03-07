@@ -21,15 +21,21 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dataUri_1 = __importDefault(require("../utils/dataUri"));
 const cloudinary_1 = __importDefault(require("cloudinary"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield usermodel_1.default
             .findOne({ _id: req.params.userid })
-            .select("firstName lastName username profilepic gender createdAt followers following ");
+            .select("firstName lastName username profilepic gender createdAt followers following");
         if (!user) {
-            return res.status(404).json({ err: "user doesnot exist" });
+            return res.status(404).json({ err: "User does not exist" });
         }
-        console.log("requesiting", req.query.myid);
+        console.log("Requesting", req.query.myid);
+        // Convert req.query.myid to ObjectId for proper comparison
+        const myId = req.query.myid;
+        const myObjectId = mongoose_1.default.Types.ObjectId.isValid(myId)
+            ? new mongoose_1.default.Types.ObjectId(myId)
+            : null;
         const toreturn = {
             firstName: user.firstName,
             lastName: user.lastName,
@@ -39,14 +45,15 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             gender: user.gender,
             followerCount: user.followers.length,
             followingCount: user.following.length,
-            //@ts-expect-error
-            doYouFollow: user.followers.includes(req.query.myid),
+            doYouFollow: myObjectId
+                ? user.followers.some((followerId) => followerId.equals(myObjectId))
+                : false, // Ensure proper ObjectId comparison
         };
         return res.status(200).json({ user: toreturn });
     }
     catch (err) {
-        console.log(err);
-        res.status(400).json(err);
+        console.error(err);
+        res.status(400).json({ error: "An error occurred" });
     }
 });
 exports.getUserInfo = getUserInfo;

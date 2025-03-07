@@ -28,9 +28,9 @@ import messagerouter from "./route/messagerouter";
 import postrouter from "./route/postrouter";
 //cloudinary setup
 cloudinary.v2.config({
-  cloud_name: "ds8b7v9pf",
-  api_key: "551468213196962",
-  api_secret: "pUMlJl1SsKS3ap_sOQbPl66idkg",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const io = new Server(httpserver, {
   cors: {
@@ -75,11 +75,9 @@ app.get(
 const start = () => {
   try {
     mongoose
-      .connect(
-        "mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority"
-      )
+      .connect(process.env.MONGODB_URI || "")
       .then(() =>
-        httpserver.listen(5000, () =>
+        httpserver.listen(process.env.PORT, () =>
           console.log("connected to the database & listening to port")
         )
       );

@@ -32,9 +32,9 @@ const messagerouter_1 = __importDefault(require("./route/messagerouter"));
 const postrouter_1 = __importDefault(require("./route/postrouter"));
 //cloudinary setup
 cloudinary_1.default.v2.config({
-    cloud_name: "ds8b7v9pf",
-    api_key: "551468213196962",
-    api_secret: "pUMlJl1SsKS3ap_sOQbPl66idkg",
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const io = new socket_io_1.Server(httpserver, {
     cors: {
@@ -72,8 +72,8 @@ app.get("/auth/callback", passport_1.default.authenticate("google", {
 const start = () => {
     try {
         mongoose_1.default
-            .connect("mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority")
-            .then(() => httpserver.listen(5000, () => console.log("connected to the database & listening to port")));
+            .connect(process.env.MONGODB_URI || "")
+            .then(() => httpserver.listen(process.env.PORT, () => console.log("connected to the database & listening to port")));
     }
     catch (err) {
         console.log(err);

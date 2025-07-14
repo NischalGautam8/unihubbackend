@@ -72,7 +72,7 @@ app.get("/auth/callback", passport_1.default.authenticate("google", {
 const start = () => {
     try {
         mongoose_1.default
-            .connect(process.env.MONGODB_URI || "")
+            .connect("mongodb+srv://nischalgautam7200:720058726Nn1@cluster0.4qkuktl.mongodb.net/?retryWrites=true&w=majority")
             .then(() => httpserver.listen(process.env.PORT, () => console.log("connected to the database & listening to port")));
     }
     catch (err) {
